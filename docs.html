@@ -85,7 +85,7 @@ pre code{background:none;padding:0;color:inherit}
   <div class="eyebrow">360 Build · Ignite Church</div>
   <h1>Care Team App — Documentation</h1>
   <p>Public intake form + staff portal for the Ignite Church Care Team, Moorhead MN. GitHub Pages front end, Supabase backend, full Row Level Security.</p>
-  <span class="vpill">V1.07 · Last modified July 16, 2026 · source: care-team_v1_07.html</span>
+  <span class="vpill">V1.08 · Last modified July 16, 2026 · source: care-team_v1_08.html</span>
 </div>
 
 <!-- 1 WHAT'S NEW -->
@@ -96,6 +96,17 @@ pre code{background:none;padding:0;color:inherit}
     <div class="card-chevron">›</div>
   </div>
   <div class="card-detail">
+    <div class="wn-item">
+      <div class="wn-v">V1.08 · JUL 16 2026</div>
+      <div class="wn-t">Workflow redesign — Dashboard, My Cases, structured activity, Reports</div>
+      <div class="wn-li"><div class="wn-dot"></div><div><b>Dashboard</b> (new landing tab): My open cases, Unassigned new, Follow-ups due, My open tasks — tap any card to jump. Due/overdue follow-ups listed right on it.</div></div>
+      <div class="wn-li"><div class="wn-dot"></div><div><b>My Cases:</b> your caseload only, sorted by next follow-up. Cards flag overdue follow-ups, "no contact yet," and 14+ days since contact.</div></div>
+      <div class="wn-li"><div class="wn-dot"></div><div><b>Structured activity log</b> replaces plain notes: Type (Call/Text/Email/In person/Meeting/Prayer/Note) + Outcome (Connected/Left message/No answer/Meeting scheduled) + details + <b>next follow-up date</b> — the date drives the Dashboard.</div></div>
+      <div class="wn-li"><div class="wn-dot"></div><div><b>Tasks open to all staff:</b> staff create/work their own (My tasks default), admin assigns anyone.</div></div>
+      <div class="wn-li"><div class="wn-dot"></div><div><b>Reports</b> (was Statistics): Team Activity (open cases, 7d/30d touches, avg days since contact, overdue count per member), Overdue Follow-Ups list, pipeline bars now show average case age. Demographics retained.</div></div>
+      <div class="wn-li"><div class="wn-dot"></div><div><b>Write access:</b> staff edit only their own cases (status/contact/workflow); reassignment is admin-only; everyone can still view everything and log activity. Enforced by RLS, not just UI.</div></div>
+      <div class="wn-li"><div class="wn-dot"></div><div><b>Requires:</b> V1.08 migration SQL (Schema Reference). No edge function change.</div></div>
+    </div>
     <div class="wn-item">
       <div class="wn-v">V1.07 · JUL 16 2026</div>
       <div class="wn-t">Version in footer</div>
@@ -171,6 +182,9 @@ pre code{background:none;padding:0;color:inherit}
     </div>
     <div class="tech"><div class="tech-h" onclick="togTech(this)">Versioning convention <span class="tog">Expand ▶</span></div>
       <div class="tech-b">Source lives as <code>care-team_v1_XX.html</code> in the working directory. Every change bumps the version and delivers <code>index.html</code> + <code>docs.html</code> together, with What's New and Technical Notes updated each version.</div>
+    </div>
+    <div class="tech"><div class="tech-h" onclick="togTech(this)">Workflow model (V1.08) <span class="tog">Expand ▶</span></div>
+      <div class="tech-b">The unit of work is the assigned case. Assignment puts it on that member's Dashboard and My Cases. Logging an activity stamps <code>last_activity_at</code> and sets <code>next_followup_date</code> — that date drives "Follow-ups due" and the overdue report. The follow-up field prefills with the case’s existing follow-up date; leaving it blank when logging clears the scheduled follow-up (no next step planned). Cards surface "No contact yet" and "14+ days since contact" flags on open cases. Write rule: owner-or-admin on case fields, admin-only reassignment, everyone can log activity on any case (covering a teammate still gets recorded).</div>
     </div>
     <div class="tech"><div class="tech-h" onclick="togTech(this)">Staff lifecycle — create-staff Edge Function V2 <span class="tog">Expand ▶</span></div>
       <div class="tech-b">Auth-user operations require the service role key, which never ships in a public page. The function (name unchanged: <code>create-staff</code>) is multi-action as of V2: <code>create</code>, <code>reset_password</code>, <code>update</code> (name/email, auth kept in sync), and <code>delete</code>. Every action verifies the caller's session token and requires <code>staff_profiles.role = 'admin'</code> server-side. Delete guards against self-removal and releases references first (requests/tasks unassigned) so the profile row can drop; routing rows cascade, note authorship sets null. Source ships as <code>create-staff.ts</code>. Own-password changes use <code>sb.auth.updateUser</code> client-side.</div>
@@ -288,6 +302,34 @@ pre code{background:none;padding:0;color:inherit}
       <tr><td>author_id</td><td>uuid fk</td><td>→ staff_profiles · on delete set null ("Former staff")</td></tr>
       <tr><td>body</td><td>text</td><td>required · append-only (no staff update/delete)</td></tr>
     </table>
+    <h3>V1.08 migration SQL — run once (existing projects)</h3>
+<pre><code>-- Structured activity log (existing notes become 'note' type)
+alter table case_notes add column activity_type text not null default 'note'
+  check (activity_type in ('call','text','email','in_person','meeting','prayer','note'));
+alter table case_notes add column outcome text
+  check (outcome in ('connected','left_message','no_answer','meeting_scheduled'));
+
+-- Workflow fields on requests
+alter table care_requests add column next_followup_date date;
+alter table care_requests add column last_activity_at timestamptz;
+
+-- Write-access rule: staff update only their own cases; admin anything.
+drop policy "staff update" on care_requests;
+create policy "update own or admin" on care_requests
+  for update to authenticated
+  using (assigned_to = auth.uid() or is_admin())
+  with check (assigned_to = auth.uid() or is_admin());
+
+-- Tasks: staff create their own, work what's theirs; admin everything.
+drop policy "admin write tasks" on tasks;
+create policy "create own tasks" on tasks
+  for insert to authenticated with check (created_by = auth.uid());
+create policy "update own or admin tasks" on tasks
+  for update to authenticated
+  using (assigned_to = auth.uid() or created_by = auth.uid() or is_admin())
+  with check (assigned_to = auth.uid() or created_by = auth.uid() or is_admin());
+create policy "delete own or admin tasks" on tasks
+  for delete to authenticated using (created_by = auth.uid() or is_admin());</code></pre>
     <h3>V1.06 migration SQL — run once (existing projects)</h3>
 <pre><code>create table case_notes (
   id uuid primary key default gen_random_uuid(),
@@ -438,7 +480,7 @@ values ('&lt;ADMIN-AUTH-UUID&gt;', 'Jon Jacobson', 'jonj@360-llc.com', 'admin');
     <div class="sec-card s-red"><b>⚠️ Do not deploy the anon key before running the RLS script.</b> With RLS off, the anon key exposes every row publicly. This app stores pastoral-care data — pregnancy loss, postpartum mental health, child medical issues. Treat it accordingly.</div>
     <div class="sec-card s-green"><b>Insert-only public access.</b> The anon key can write a new request and nothing else — no reads, no updates, no other tables.</div>
     <div class="sec-card s-green"><b>Admin writes enforced in Postgres.</b> Roles, routing, and tasks require <code>is_admin()</code> (security-definer function) — hiding the tabs in the UI is convenience, the database is the gate.</div>
-    <div class="sec-card s-blue"><b>No credentials in the codebase.</b> Only the Supabase URL and anon key are baked. Passwords live exclusively in Supabase Auth. Full-visibility decision: all authenticated staff can read and update all requests.</div>
+    <div class="sec-card s-blue"><b>No credentials in the codebase.</b> Only the Supabase URL and anon key are baked. Passwords live exclusively in Supabase Auth. Visibility vs. write access: all staff read everything; case edits are owner-or-admin and reassignment admin-only (RLS-enforced as of V1.08).</div>
   </div>
 </div>
 
@@ -462,6 +504,7 @@ values ('&lt;ADMIN-AUTH-UUID&gt;', 'Jon Jacobson', 'jonj@360-llc.com', 'admin');
     <h3>Version history</h3>
     <table class="schema-table">
       <tr><th>Version</th><th>Date</th><th>Changes</th></tr>
+      <tr><td>V1.08</td><td>2026-07-16</td><td>Workflow redesign: Dashboard, My Cases, structured activity log with follow-up dates, Tasks for all staff, Reports (team activity, overdue, pipeline aging), assignee filter, owner-or-admin write RLS. Migration required.</td></tr>
       <tr><td>V1.07</td><td>2026-07-16</td><td>Version number displayed in footer.</td></tr>
       <tr><td>V1.06</td><td>2026-07-16</td><td>Case notes per request (append-only log). Staff Reset PW / Edit / Remove via multi-action Edge Function V2. Admin Delete Request. Editable submitter email/phone. Migration: case_notes table + 4 new policies (15 total).</td></tr>
       <tr><td>V1.05</td><td>2026-07-16</td><td>Flame marks removed; wordmark only.</td></tr>
@@ -475,7 +518,7 @@ values ('&lt;ADMIN-AUTH-UUID&gt;', 'Jon Jacobson', 'jonj@360-llc.com', 'admin');
   </div>
 </div>
 
-<div class="doc-footer">Care Team App · Ignite Church, Moorhead MN · V1.07 · Built by 360 Solutions LLC</div>
+<div class="doc-footer">Care Team App · Ignite Church, Moorhead MN · V1.08 · Built by 360 Solutions LLC</div>
 </div>
 
 <script>
