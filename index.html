@@ -163,7 +163,9 @@ footer .fmark{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-sp
 .kv dt{color:var(--muted);font-size:12.5px;font-weight:600}
 .kv dd{min-width:0;overflow-wrap:anywhere}
 @media(max-width:520px){.kv{grid-template-columns:1fr}.kv dt{margin-top:6px}}
-.panel-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+.panel-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap;align-items:center}
+.note{border-left:3px solid var(--gold);background:#fff;border:1px solid var(--line);border-left:3px solid var(--gold);padding:8px 12px;margin-bottom:8px;border-radius:0 6px 6px 0;font-size:13.5px;white-space:pre-wrap;overflow-wrap:anywhere}
+.note .nmeta{font-size:11.5px;color:var(--muted);margin-bottom:3px;white-space:normal}
 .route-hint{font-size:12.5px;background:var(--gold-pale);border-left:3px solid var(--gold);padding:8px 12px;border-radius:0 6px 6px 0;margin:10px 0}
 /* stats */
 .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px}
@@ -411,7 +413,19 @@ footer .fmark{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-sp
       <div><label class="fl" for="dStatus">Status</label><select id="dStatus"></select></div>
       <div><label class="fl" for="dAssign">Assigned to</label><select id="dAssign"></select></div>
     </div>
+    <div class="grid2 row">
+      <div><label class="fl" for="dEmail">Email</label><input type="email" id="dEmail"></div>
+      <div><label class="fl" for="dPhone">Phone</label><input type="tel" id="dPhone"></div>
+    </div>
+    <h3 style="font-family:'Oswald',sans-serif;text-transform:uppercase;font-size:14px;letter-spacing:.05em;margin:18px 0 8px">Notes</h3>
+    <div id="dNotes"><p class="mut">Loading notes…</p></div>
+    <div class="row" style="margin-top:10px">
+      <textarea id="dNoteBody" placeholder="Log a contact, meeting, or update…" style="min-height:64px"></textarea>
+      <button class="btn ghost sm" style="margin-top:8px" onclick="addNote()">Add Note</button>
+    </div>
     <div class="panel-actions">
+      <button class="btn danger sm hide" id="dDelete" onclick="deleteRequest()">Delete Request</button>
+      <span style="flex:1"></span>
       <button class="btn ghost sm" onclick="closeDetail()">Close</button>
       <button class="btn sm" id="dSave" onclick="saveDetail()">Save Changes</button>
     </div>
@@ -440,7 +454,7 @@ const BAKED_CONFIG = {
 };
 /* ================================================ */
 
-const APP_VERSION = "V1.05";
+const APP_VERSION = "V1.06";
 const NEEDS = [
   "Miscarriage",
   "Stillbirth",
@@ -655,8 +669,6 @@ function openDetail(id){
   const pcLabel = {email:"Email",call:"Phone call",text:"Text"}[r.preferred_contact]||"—";
   const kv = [
     ["Submitted", new Date(r.created_at).toLocaleString()],
-    ["Email", r.email],
-    ["Phone", r.phone||"—"],
     ["Preferred contact", pcLabel],
     ["Gender", r.gender ? r.gender[0].toUpperCase()+r.gender.slice(1) : "—"],
     ["Relationship", relLabel + (r.relationship_status!=="single" ? ` (${r.relationship_status==="married"?"spouse":"partner"}: ${esc(partner)})` : "")],
@@ -676,19 +688,64 @@ function openDetail(id){
 
   document.getElementById("dStatus").innerHTML = STATUSES.map(s=>`<option value="${s.v}" ${s.v===r.status?"selected":""}>${s.l}</option>`).join("");
   document.getElementById("dAssign").innerHTML = `<option value="">Unassigned</option>` + staff.map(s=>`<option value="${s.id}" ${s.id===r.assigned_to?"selected":""}>${esc(s.full_name)}</option>`).join("");
+  document.getElementById("dEmail").value = r.email || "";
+  document.getElementById("dPhone").value = r.phone || "";
+  document.getElementById("dNoteBody").value = "";
+  document.getElementById("dDelete").classList.toggle("hide", me.role!=="admin");
   document.getElementById("dErr").style.display="none";
   document.getElementById("detailOverlay").classList.add("open");
+  loadNotes(id);
+}
+function noteAuthor(id){ if(!id) return "Former staff"; const n = staffName(id); return n==="—" ? "Former staff" : n; }
+async function loadNotes(id){
+  const box = document.getElementById("dNotes");
+  box.innerHTML = `<p class="mut">Loading notes…</p>`;
+  const { data, error } = await sb.from("case_notes").select("*").eq("request_id", id).order("created_at",{ascending:false});
+  if(error){ box.innerHTML = `<p class="mut">Could not load notes: ${esc(error.message)}</p>`; return; }
+  if(id !== detailId) return; // panel changed while loading
+  renderNotes(data||[]);
+}
+let currentNotes = [];
+function renderNotes(list){
+  currentNotes = list;
+  const box = document.getElementById("dNotes");
+  if(!list.length){ box.innerHTML = `<p class="mut">No notes yet — log the first contact below.</p>`; return; }
+  box.innerHTML = list.map(n=>`<div class="note"><div class="nmeta">${esc(noteAuthor(n.author_id))} · ${new Date(n.created_at).toLocaleString()}</div>${esc(n.body)}</div>`).join("");
+}
+async function addNote(){
+  const body = document.getElementById("dNoteBody").value.trim();
+  const derr = document.getElementById("dErr");
+  derr.style.display="none";
+  if(!body){ derr.textContent="Note is empty."; derr.style.display="block"; return; }
+  const { data, error } = await sb.from("case_notes").insert({request_id: detailId, author_id: me.id, body}).select().single();
+  if(error){ derr.textContent="Note failed: "+error.message; derr.style.display="block"; return; }
+  document.getElementById("dNoteBody").value="";
+  renderNotes([data, ...currentNotes]);
+}
+async function deleteRequest(){
+  const r = requests.find(x=>x.id===detailId); if(!r) return;
+  if(!confirm(`Permanently delete the request from ${r.first_name} ${r.last_name}? Notes on it are deleted too. This cannot be undone.`)) return;
+  const { error } = await sb.from("care_requests").delete().eq("id", detailId);
+  const derr = document.getElementById("dErr");
+  if(error){ derr.textContent="Delete failed: "+error.message; derr.style.display="block"; return; }
+  requests = requests.filter(x=>x.id!==detailId);
+  renderRequests(); renderStats(); if(me.role==="admin") renderTasks();
+  closeDetail();
 }
 function closeDetail(){ document.getElementById("detailOverlay").classList.remove("open"); detailId=null; }
 async function saveDetail(){
   const r = requests.find(x=>x.id===detailId); if(!r) return;
+  const derr = document.getElementById("dErr");
+  derr.style.display="none";
   let status = document.getElementById("dStatus").value;
   const assigned = document.getElementById("dAssign").value || null;
+  const email = document.getElementById("dEmail").value.trim();
+  const phone = document.getElementById("dPhone").value.trim() || null;
+  if(!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ derr.textContent="Enter a valid email."; derr.style.display="block"; return; }
   if(status==="new" && assigned) status = "assigned"; // auto-bump
-  const { error } = await sb.from("care_requests").update({status, assigned_to:assigned}).eq("id", detailId);
-  const derr = document.getElementById("dErr");
+  const { error } = await sb.from("care_requests").update({status, assigned_to:assigned, email, phone}).eq("id", detailId);
   if(error){ derr.textContent="Save failed: "+error.message; derr.style.display="block"; return; }
-  r.status = status; r.assigned_to = assigned;
+  r.status = status; r.assigned_to = assigned; r.email = email; r.phone = phone;
   renderRequests(); renderStats(); closeDetail();
 }
 
@@ -784,6 +841,9 @@ function renderTeam(){
           <option value="staff" ${s.role==="staff"?"selected":""}>Staff</option>
           <option value="admin" ${s.role==="admin"?"selected":""}>Admin</option>
         </select>
+        <button class="btn ghost sm" onclick="resetStaffPassword('${s.id}')">Reset PW</button>
+        <button class="btn ghost sm" onclick="editStaff('${s.id}')">Edit</button>
+        ${s.id!==me.id?`<button class="btn danger sm" onclick="removeStaff('${s.id}')">Remove</button>`:""}
       </div>
     </div>`).join("");
 
@@ -815,7 +875,26 @@ async function toggleRoute(need, staffId, on){
   }
 }
 
-/* ---------- add staff (via create-staff edge function) ---------- */
+/* ---------- staff admin (via create-staff edge function) ---------- */
+async function staffAdmin(payload){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session) return { error: "Session expired — sign in again." };
+  let res, body;
+  try{
+    res = await fetch(BAKED_CONFIG.SUPABASE_URL + "/functions/v1/create-staff", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer "+session.access_token,
+        "apikey": BAKED_CONFIG.SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify(payload)
+    });
+    body = await res.json();
+  }catch(e){ return { error: "Could not reach the create-staff function — confirm the V2 code is deployed (docs → Setup Guide)." }; }
+  if(!res.ok) return { error: (body && body.error) ? body.error : "Request failed." };
+  return body;
+}
 async function addStaff(){
   const err = document.getElementById("staffErr"), ok = document.getElementById("staffOk");
   err.style.display="none"; ok.style.display="none";
@@ -826,28 +905,45 @@ async function addStaff(){
   if(!full_name || !email) return fail("Name and email are required.");
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return fail("Enter a valid email address.");
   if(temp_password.length < 8) return fail("Temp password must be at least 8 characters.");
-  const { data:{ session } } = await sb.auth.getSession();
-  if(!session) return fail("Session expired — sign in again.");
-  let res, body;
-  try{
-    res = await fetch(BAKED_CONFIG.SUPABASE_URL + "/functions/v1/create-staff", {
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "Authorization":"Bearer "+session.access_token,
-        "apikey": BAKED_CONFIG.SUPABASE_ANON_KEY
-      },
-      body: JSON.stringify({ email, full_name, temp_password, role })
-    });
-    body = await res.json();
-  }catch(e){ return fail("Could not reach the create-staff function — confirm it's deployed (docs → Setup Guide)."); }
-  if(!res.ok) return fail(body && body.error ? body.error : "Create failed.");
-  staff.push(body.profile);
+  const r = await staffAdmin({ action:"create", email, full_name, temp_password, role });
+  if(r.error) return fail(r.error);
+  staff.push(r.profile);
   staff.sort((a,b)=>a.full_name.localeCompare(b.full_name));
   renderTeam(); renderTasks();
   ["s_name","s_email","s_pass"].forEach(id=>document.getElementById(id).value="");
-  ok.textContent = "Account created for "+body.profile.full_name+". Give them their temp password — they sign in via Staff Login and should change it using the Password button.";
+  ok.textContent = "Account created for "+r.profile.full_name+". Give them their temp password — they sign in via Staff Login and should change it using the Password button.";
   ok.style.display="block";
+}
+async function resetStaffPassword(id){
+  const s = staff.find(x=>x.id===id); if(!s) return;
+  const np = prompt("New temp password for "+s.full_name+" (8+ characters):");
+  if(np===null) return;
+  if(np.length < 8){ alert("Password must be at least 8 characters."); return; }
+  const r = await staffAdmin({ action:"reset_password", staff_id:id, new_password:np });
+  alert(r.error ? "Reset failed: "+r.error : "Password reset for "+s.full_name+". Give them the new temp password — they should change it after signing in.");
+}
+async function editStaff(id){
+  const s = staff.find(x=>x.id===id); if(!s) return;
+  const full_name = prompt("Full name:", s.full_name);
+  if(full_name===null) return;
+  const email = prompt("Email:", s.email);
+  if(email===null) return;
+  if(!full_name.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())){ alert("Valid name and email required."); return; }
+  const r = await staffAdmin({ action:"update", staff_id:id, full_name:full_name.trim(), email:email.trim() });
+  if(r.error){ alert("Update failed: "+r.error); return; }
+  s.full_name = r.profile.full_name; s.email = r.profile.email;
+  renderTeam(); renderTasks(); renderRequests();
+}
+async function removeStaff(id){
+  const s = staff.find(x=>x.id===id); if(!s) return;
+  if(!confirm("Remove "+s.full_name+"? Their login is deleted, their assigned requests and tasks become Unassigned, and they're cleared from the routing map. Notes they wrote are kept as “Former staff.” This cannot be undone.")) return;
+  const r = await staffAdmin({ action:"delete", staff_id:id });
+  if(r.error){ alert("Remove failed: "+r.error); return; }
+  staff = staff.filter(x=>x.id!==id);
+  routing = routing.filter(x=>x.staff_id!==id);
+  requests.forEach(q=>{ if(q.assigned_to===id) q.assigned_to=null; });
+  tasks.forEach(t=>{ if(t.assigned_to===id) t.assigned_to=null; if(t.created_by===id) t.created_by=null; });
+  renderTeam(); renderTasks(); renderRequests(); renderStats();
 }
 
 /* ---------- change own password ---------- */
