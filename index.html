@@ -439,7 +439,7 @@ footer .fmark{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-sp
       <div class="fmark">Ignite Church &middot; Care Team</div>
       <div>925 30th Ave S, Moorhead, MN 56560</div>
     </div>
-    <div><a href="#" id="staffLink" onclick="showView('login');return false;">Staff Login</a></div>
+    <div><a href="#" id="staffLink" onclick="showView('login');return false;">Staff Login</a><div style="font-size:10.5px;opacity:.55;margin-top:4px;text-align:right" id="footVersion"></div></div>
   </div>
 </footer>
 
@@ -454,7 +454,7 @@ const BAKED_CONFIG = {
 };
 /* ================================================ */
 
-const APP_VERSION = "V1.06";
+const APP_VERSION = "V1.07";
 const NEEDS = [
   "Miscarriage",
   "Stillbirth",
@@ -956,6 +956,7 @@ async function changePassword(){
 }
 
 /* ---------- boot ---------- */
+document.getElementById("footVersion").textContent = APP_VERSION;
 (async function boot(){
   if(configured){
     const { data:{ session } } = await sb.auth.getSession();
