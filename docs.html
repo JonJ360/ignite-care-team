@@ -85,7 +85,7 @@ pre code{background:none;padding:0;color:inherit}
   <div class="eyebrow">360 Build · Ignite Church</div>
   <h1>Care Team App — Documentation</h1>
   <p>Public intake form + staff portal for the Ignite Church Care Team, Moorhead MN. GitHub Pages front end, Supabase backend, full Row Level Security.</p>
-  <span class="vpill">V1.06 · Last modified July 16, 2026 · source: care-team_v1_06.html</span>
+  <span class="vpill">V1.07 · Last modified July 16, 2026 · source: care-team_v1_07.html</span>
 </div>
 
 <!-- 1 WHAT'S NEW -->
@@ -96,6 +96,11 @@ pre code{background:none;padding:0;color:inherit}
     <div class="card-chevron">›</div>
   </div>
   <div class="card-detail">
+    <div class="wn-item">
+      <div class="wn-v">V1.07 · JUL 16 2026</div>
+      <div class="wn-t">Version in footer</div>
+      <div class="wn-li"><div class="wn-dot"></div><div>App version now displays in the footer under Staff Login, driven by the APP_VERSION constant — instant check of what's actually deployed vs. cached.</div></div>
+    </div>
     <div class="wn-item">
       <div class="wn-v">V1.06 · JUL 16 2026</div>
       <div class="wn-t">CRM functionality — case notes, staff lifecycle, request management</div>
@@ -457,6 +462,7 @@ values ('&lt;ADMIN-AUTH-UUID&gt;', 'Jon Jacobson', 'jonj@360-llc.com', 'admin');
     <h3>Version history</h3>
     <table class="schema-table">
       <tr><th>Version</th><th>Date</th><th>Changes</th></tr>
+      <tr><td>V1.07</td><td>2026-07-16</td><td>Version number displayed in footer.</td></tr>
       <tr><td>V1.06</td><td>2026-07-16</td><td>Case notes per request (append-only log). Staff Reset PW / Edit / Remove via multi-action Edge Function V2. Admin Delete Request. Editable submitter email/phone. Migration: case_notes table + 4 new policies (15 total).</td></tr>
       <tr><td>V1.05</td><td>2026-07-16</td><td>Flame marks removed; wordmark only.</td></tr>
       <tr><td>V1.04</td><td>2026-07-16</td><td>Logo marks rebuilt to official brand (flame + open ring, gray/gold wordmark). Phone number removed from footer and error copy.</td></tr>
@@ -469,7 +475,7 @@ values ('&lt;ADMIN-AUTH-UUID&gt;', 'Jon Jacobson', 'jonj@360-llc.com', 'admin');
   </div>
 </div>
 
-<div class="doc-footer">Care Team App · Ignite Church, Moorhead MN · V1.06 · Built by 360 Solutions LLC</div>
+<div class="doc-footer">Care Team App · Ignite Church, Moorhead MN · V1.07 · Built by 360 Solutions LLC</div>
 </div>
 
 <script>
