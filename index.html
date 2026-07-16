@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ignite Church Care Team</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --cream:#F2F1EB;
+  --paper:#FBFAF6;
+  --ink:#20251F;
+  --ink-soft:#3A4038;
+  --muted:#6B6F66;
+  --gold:#E5C444;
+  --gold-dark:#C9A82E;
+  --gold-pale:#F7EDC8;
+  --line:#E0DED2;
+  --danger:#B4402F;
+  --ok:#4A7A4C;
+  --radius:8px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  font-size:15px;
+  line-height:1.55;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+/* ===== brand bar + header ===== */
+.brandbar{height:4px;background:var(--gold)}
+header.site{
+  background:var(--cream);
+  border-bottom:1px solid var(--line);
+  padding:14px 20px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.logo svg{width:26px;height:32px;flex:0 0 auto}
+.wordmark{font-family:'Oswald',sans-serif;font-weight:700;font-size:18px;letter-spacing:.04em;text-transform:uppercase;line-height:1}
+.wordmark .gold{color:var(--gold-dark)}
+.wordmark small{display:block;font-family:'Inter',sans-serif;font-weight:600;font-size:10px;letter-spacing:.22em;color:var(--muted);margin-top:3px}
+.hdr-right{font-size:12px;color:var(--muted);font-weight:500}
+.hdr-right button{background:none;border:1px solid var(--line);border-radius:6px;padding:6px 12px;font:inherit;color:var(--ink);cursor:pointer}
+.hdr-right button:hover{border-color:var(--ink)}
+main{flex:1;width:100%;max-width:920px;margin:0 auto;padding:28px 20px 56px}
+main.wide{max-width:1080px}
+/* ===== type ===== */
+h1.display{
+  font-family:'Oswald',sans-serif;font-weight:700;text-transform:uppercase;
+  font-size:clamp(26px,6vw,38px);line-height:1.12;letter-spacing:.015em;
+}
+.goldline{width:64px;height:5px;background:var(--gold);margin:14px 0 18px}
+.lede{color:var(--ink-soft);max-width:60ch}
+h2.sec{
+  font-family:'Oswald',sans-serif;font-weight:600;text-transform:uppercase;
+  font-size:15px;letter-spacing:.08em;color:var(--ink);
+  padding-bottom:8px;border-bottom:2px solid var(--gold);
+  display:inline-block;margin-bottom:16px;
+}
+/* ===== card / form ===== */
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-top:22px}
+fieldset{border:0;margin-bottom:26px}
+fieldset:last-of-type{margin-bottom:8px}
+label.fl{display:block;font-weight:600;font-size:13px;margin-bottom:6px}
+label.fl .req{color:var(--gold-dark)}
+.hint{font-size:12px;color:var(--muted);margin-top:-2px;margin-bottom:8px}
+input[type=text],input[type=email],input[type=tel],input[type=date],select,textarea{
+  width:100%;background:#fff;border:1px solid var(--line);border-radius:6px;
+  padding:10px 12px;font:inherit;color:var(--ink);
+}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--gold-dark);outline-offset:1px}
+textarea{min-height:96px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.grid2{grid-template-columns:1fr}}
+.row{margin-bottom:14px}
+/* pill radios / checks */
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pills label{
+  border:1px solid var(--line);background:#fff;border-radius:999px;
+  padding:8px 16px;font-size:14px;font-weight:500;cursor:pointer;user-select:none;
+}
+.pills input{position:absolute;opacity:0;pointer-events:none}
+.pills label:has(input:checked){background:var(--ink);color:var(--gold);border-color:var(--ink)}
+.pills label:has(input:focus-visible){outline:2px solid var(--gold-dark);outline-offset:1px}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:640px){.checks{grid-template-columns:1fr}}
+.checks label{
+  display:flex;align-items:flex-start;gap:10px;border:1px solid var(--line);
+  background:#fff;border-radius:6px;padding:10px 12px;font-size:14px;cursor:pointer;
+}
+.checks label:has(input:checked){border-color:var(--gold-dark);background:var(--gold-pale)}
+.checks input{margin-top:3px;accent-color:var(--gold-dark)}
+.btn{
+  font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.06em;
+  font-weight:600;font-size:14px;background:var(--gold);color:var(--ink);
+  border:0;border-radius:6px;padding:12px 26px;cursor:pointer;
+}
+.btn:hover{background:var(--gold-dark)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn.ghost:hover{border-color:var(--ink);background:transparent}
+.btn.sm{padding:8px 16px;font-size:12px}
+.btn.danger{background:transparent;border:1px solid var(--danger);color:var(--danger)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.consent{font-size:12.5px;color:var(--muted);border-left:3px solid var(--gold);padding:8px 12px;background:var(--gold-pale);border-radius:0 6px 6px 0;margin:18px 0}
+.formerr{color:var(--danger);font-size:13px;font-weight:600;margin-top:12px;display:none}
+.notice{border:1px solid var(--line);background:#fff;border-radius:6px;padding:10px 14px;font-size:13px;color:var(--muted);margin-top:14px}
+/* success */
+.success{text-align:center;padding:44px 20px}
+.success .flame{width:46px;margin:0 auto 16px}
+/* ===== footer ===== */
+footer.site{
+  background:var(--ink);color:var(--cream);padding:26px 20px;
+  font-size:12.5px;
+}
+footer.site .inner{max-width:920px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+footer.site a{color:var(--gold);text-decoration:none;font-weight:600}
+footer.site a:hover{text-decoration:underline}
+footer .fmark{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:13px}
+/* ===== login ===== */
+.login-card{max-width:420px;margin:36px auto 0}
+/* ===== portal ===== */
+.tabs{display:flex;gap:4px;border-bottom:2px solid var(--line);margin:22px 0 20px;overflow-x:auto}
+.tabs button{
+  font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.06em;
+  font-weight:600;font-size:13px;background:none;border:0;border-bottom:3px solid transparent;
+  padding:10px 16px;cursor:pointer;color:var(--muted);white-space:nowrap;margin-bottom:-2px;
+}
+.tabs button.active{color:var(--ink);border-bottom-color:var(--gold)}
+.list-item{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px 16px;margin-bottom:10px;cursor:pointer;
+  display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;
+}
+.list-item:hover{border-color:var(--gold-dark)}
+.li-main{min-width:0}
+.li-name{font-weight:700;font-size:15px}
+.li-sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+.li-side{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{
+  font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  border-radius:999px;padding:4px 10px;white-space:nowrap;
+}
+.b-new{background:var(--gold);color:var(--ink)}
+.b-assigned{background:#DCE7F2;color:#2A4A6B}
+.b-contacted{background:#E4DCF2;color:#4A3A6B}
+.b-walking{background:#DCEEDD;color:#2F5A32}
+.b-closed{background:#E6E4DA;color:var(--muted)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.filters select{width:auto;padding:8px 10px;font-size:13px}
+/* detail overlay */
+.overlay{position:fixed;inset:0;background:rgba(32,37,31,.55);display:none;align-items:flex-start;justify-content:center;padding:24px 14px;overflow-y:auto;z-index:50}
+.overlay.open{display:flex}
+.panel{background:var(--paper);border-radius:var(--radius);max-width:640px;width:100%;padding:24px;margin:auto 0}
+.panel h3{font-family:'Oswald',sans-serif;text-transform:uppercase;font-size:18px;letter-spacing:.03em}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:6px 14px;font-size:14px;margin:16px 0}
+.kv dt{color:var(--muted);font-size:12.5px;font-weight:600}
+.kv dd{min-width:0;overflow-wrap:anywhere}
+@media(max-width:520px){.kv{grid-template-columns:1fr}.kv dt{margin-top:6px}}
+.panel-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+.route-hint{font-size:12.5px;background:var(--gold-pale);border-left:3px solid var(--gold);padding:8px 12px;border-radius:0 6px 6px 0;margin:10px 0}
+/* stats */
+.statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px}
+.stat{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.stat .n{font-family:'Oswald',sans-serif;font-weight:700;font-size:30px;line-height:1}
+.stat .l{font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.barrow{display:grid;grid-template-columns:190px 1fr 34px;gap:10px;align-items:center;margin-bottom:8px;font-size:13px}
+@media(max-width:560px){.barrow{grid-template-columns:130px 1fr 30px;font-size:12px}}
+.bar{background:#EAE8DD;border-radius:4px;height:16px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--gold)}
+.barrow .cnt{font-weight:700;text-align:right}
+/* team / tasks tables */
+.trow{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:10px 14px;margin-bottom:8px;flex-wrap:wrap}
+.trow .t-main{min-width:0}
+.trow .t-name{font-weight:600;font-size:14px}
+.trow .t-sub{font-size:12px;color:var(--muted)}
+.trow select{width:auto;padding:6px 8px;font-size:13px}
+.trow.done .t-name{text-decoration:line-through;color:var(--muted)}
+.route-block{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px}
+.route-block .rn{font-weight:700;font-size:14px;margin-bottom:8px}
+.route-block .checks{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+.mut{color:var(--muted);font-size:13px}
+.spacer{height:18px}
+.inline-form{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:18px}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<div class="brandbar"></div>
+<header class="site">
+  <a class="logo" href="#" onclick="showView('public');return false;">
+    <svg viewBox="0 0 24 30" aria-hidden="true"><path fill="#E5C444" d="M12 0c1.4 4.6 6.2 7.4 8.6 11.6 2.7 4.7 2 11-1.9 14.8C15 30 9 30 5.3 26.4 1.4 22.6.7 16.3 3.4 11.6 5.8 7.4 10.6 4.6 12 0z"/><path fill="#20251F" d="M12 10.5c.8 2.6 3.4 4.2 4.7 6.6 1.4 2.6 1 6-1.1 8.1-2 2-5.2 2-7.2 0-2.1-2.1-2.5-5.5-1.1-8.1 1.3-2.4 3.9-4 4.7-6.6z"/></svg>
+    <span class="wordmark">IGNITE<span class="gold">CHURCH</span><small>CARE TEAM</small></span>
+  </a>
+  <div class="hdr-right">
+    <span id="hdrUser" class="hide"></span>
+    <button id="hdrSignOut" class="hide" onclick="signOut()">Sign out</button>
+  </div>
+</header>
+
+<main id="mainEl">
+
+<!-- ============ PUBLIC INTAKE VIEW ============ -->
+<section id="view-public">
+  <h1 class="display">You Don't Have To<br>Walk This Alone.</h1>
+  <div class="goldline"></div>
+  <p class="lede">The Ignite Care Team walks alongside individuals and couples through loss, pain, and challenging seasons — pointing always to the mercy and grace of Jesus. Share a little about yourself below and a Care Team member will reach out personally.</p>
+
+  <form class="card" id="intakeForm" novalidate>
+    <fieldset>
+      <h2 class="sec">About You</h2>
+      <div class="grid2 row">
+        <div><label class="fl" for="f_first">First name <span class="req">*</span></label><input type="text" id="f_first" autocomplete="given-name" required></div>
+        <div><label class="fl" for="f_last">Last name <span class="req">*</span></label><input type="text" id="f_last" autocomplete="family-name" required></div>
+      </div>
+      <div class="row">
+        <label class="fl">Gender <span class="mut" style="font-weight:400">(optional)</span></label>
+        <div class="pills" id="genderPills">
+          <label><input type="radio" name="gender" value="female">Female</label>
+          <label><input type="radio" name="gender" value="male">Male</label>
+          <label><input type="radio" name="gender" value="unspecified">Prefer not to say</label>
+        </div>
+      </div>
+      <div class="row">
+        <label class="fl">Relationship status <span class="req">*</span></label>
+        <div class="pills">
+          <label><input type="radio" name="relstatus" value="single" required>Single</label>
+          <label><input type="radio" name="relstatus" value="married">Married</label>
+          <label><input type="radio" name="relstatus" value="dating">Dating</label>
+        </div>
+      </div>
+      <div id="partnerBlock" class="hide">
+        <div class="grid2 row">
+          <div><label class="fl" for="p_first" id="pFirstLabel">Spouse's first name</label><input type="text" id="p_first"></div>
+          <div><label class="fl" for="p_last" id="pLastLabel">Spouse's last name</label><input type="text" id="p_last"></div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <h2 class="sec">How We Can Reach You</h2>
+      <div class="grid2 row">
+        <div><label class="fl" for="f_email">Email <span class="req">*</span></label><input type="email" id="f_email" autocomplete="email" required></div>
+        <div><label class="fl" for="f_phone">Phone</label><input type="tel" id="f_phone" autocomplete="tel"></div>
+      </div>
+      <div class="row">
+        <label class="fl">Preferred way to be contacted</label>
+        <div class="pills">
+          <label><input type="radio" name="prefcontact" value="email" checked>Email</label>
+          <label><input type="radio" name="prefcontact" value="call">Phone call</label>
+          <label><input type="radio" name="prefcontact" value="text">Text</label>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <h2 class="sec">Your Church Home</h2>
+      <div class="row">
+        <label class="fl">Is Ignite your home church? <span class="req">*</span></label>
+        <div class="pills">
+          <label><input type="radio" name="homechurch" value="yes" required>Yes</label>
+          <label><input type="radio" name="homechurch" value="no">No</label>
+        </div>
+      </div>
+      <div class="row">
+        <label class="fl">Are you part of a Life Group? <span class="req">*</span></label>
+        <div class="pills">
+          <label><input type="radio" name="lifegroup" value="yes" required>Yes</label>
+          <label><input type="radio" name="lifegroup" value="no">No</label>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <h2 class="sec">How Can We Care For You?</h2>
+      <p class="hint">Select every area that applies to your situation.</p>
+      <div class="checks" id="needChecks"></div>
+      <div class="row hide" id="primaryBlock" style="margin-top:14px">
+        <label class="fl" for="f_primary">Which of these feels most pressing right now? <span class="req">*</span></label>
+        <select id="f_primary"></select>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <label class="fl" for="f_details">Anything you'd like us to know? <span class="mut" style="font-weight:400">(optional)</span></label>
+        <textarea id="f_details" placeholder="Share as much or as little as you're comfortable with."></textarea>
+      </div>
+    </fieldset>
+
+    <p class="consent">Everything you share here is confidential and is seen only by members of the Ignite Care Team.</p>
+    <button class="btn" type="submit" id="submitBtn">Request Care</button>
+    <p class="formerr" id="formErr"></p>
+    <p class="notice hide" id="cfgNotice">This form is not yet connected to its database. An administrator needs to complete setup (see docs).</p>
+  </form>
+</section>
+
+<!-- ============ SUCCESS VIEW ============ -->
+<section id="view-success" class="hide">
+  <div class="card success">
+    <svg class="flame" viewBox="0 0 24 30" aria-hidden="true"><path fill="#E5C444" d="M12 0c1.4 4.6 6.2 7.4 8.6 11.6 2.7 4.7 2 11-1.9 14.8C15 30 9 30 5.3 26.4 1.4 22.6.7 16.3 3.4 11.6 5.8 7.4 10.6 4.6 12 0z"/><path fill="#20251F" d="M12 10.5c.8 2.6 3.4 4.2 4.7 6.6 1.4 2.6 1 6-1.1 8.1-2 2-5.2 2-7.2 0-2.1-2.1-2.5-5.5-1.1-8.1 1.3-2.4 3.9-4 4.7-6.6z"/></svg>
+    <h1 class="display" style="font-size:26px">We've Received Your Request</h1>
+    <div class="goldline" style="margin:14px auto 16px"></div>
+    <p class="lede" style="margin:0 auto">Thank you for trusting us with this. A member of the Care Team will reach out to you personally, soon. You are not alone.</p>
+  </div>
+</section>
+
+<!-- ============ LOGIN VIEW ============ -->
+<section id="view-login" class="hide">
+  <div class="card login-card">
+    <h2 class="sec">Staff Sign In</h2>
+    <form id="loginForm" novalidate>
+      <div class="row"><label class="fl" for="l_email">Email</label><input type="email" id="l_email" autocomplete="username" required></div>
+      <div class="row"><label class="fl" for="l_pass">Password</label><input type="password" id="l_pass" autocomplete="current-password" required style="width:100%;background:#fff;border:1px solid var(--line);border-radius:6px;padding:10px 12px;font:inherit"></div>
+      <button class="btn" type="submit">Sign In</button>
+      <p class="formerr" id="loginErr"></p>
+    </form>
+  </div>
+</section>
+
+<!-- ============ PORTAL VIEW ============ -->
+<section id="view-portal" class="hide">
+  <h1 class="display" style="font-size:24px">Care Team Portal</h1>
+  <div class="goldline"></div>
+  <nav class="tabs" id="portalTabs">
+    <button data-tab="requests" class="active">Requests</button>
+    <button data-tab="stats">Statistics</button>
+    <button data-tab="tasks" class="hide" id="tabTasksBtn">Tasks</button>
+    <button data-tab="team" class="hide" id="tabTeamBtn">Team &amp; Routing</button>
+  </nav>
+
+  <!-- Requests -->
+  <div id="tab-requests">
+    <div class="filters">
+      <select id="fltStatus"><option value="">All statuses</option></select>
+      <select id="fltNeed"><option value="">All areas of need</option></select>
+    </div>
+    <div id="reqList"></div>
+    <p class="mut hide" id="reqEmpty">No care requests match these filters.</p>
+  </div>
+
+  <!-- Statistics -->
+  <div id="tab-stats" class="hide">
+    <div class="statgrid" id="statCards"></div>
+    <h2 class="sec">Areas of Need</h2>
+    <div id="needBars"></div>
+    <div class="spacer"></div>
+    <h2 class="sec">Pipeline</h2>
+    <div id="statusBars"></div>
+    <div class="spacer"></div>
+    <h2 class="sec">Demographics</h2>
+    <div id="demoBars"></div>
+  </div>
+
+  <!-- Tasks (admin) -->
+  <div id="tab-tasks" class="hide">
+    <div class="inline-form">
+      <h2 class="sec">New Task</h2>
+      <div class="grid2 row">
+        <div><label class="fl" for="t_title">Title</label><input type="text" id="t_title"></div>
+        <div><label class="fl" for="t_due">Due date</label><input type="date" id="t_due"></div>
+      </div>
+      <div class="row"><label class="fl" for="t_desc">Description</label><input type="text" id="t_desc"></div>
+      <div class="grid2 row">
+        <div><label class="fl" for="t_assignee">Assign to</label><select id="t_assignee"></select></div>
+        <div><label class="fl" for="t_request">Related request (optional)</label><select id="t_request"><option value="">—</option></select></div>
+      </div>
+      <button class="btn sm" onclick="createTask()">Add Task</button>
+      <p class="formerr" id="taskErr"></p>
+    </div>
+    <div id="taskList"></div>
+    <p class="mut hide" id="taskEmpty">No tasks yet.</p>
+  </div>
+
+  <!-- Team & Routing (admin) -->
+  <div id="tab-team" class="hide">
+    <h2 class="sec">Care Team Staff</h2>
+    <p class="mut" style="margin-bottom:12px">Accounts are created in the Supabase Auth dashboard, then appear here after their profile row is added (see docs). Roles can be changed below.</p>
+    <div id="staffList"></div>
+    <div class="spacer"></div>
+    <h2 class="sec">Routing — Who Serves Each Area</h2>
+    <p class="mut" style="margin-bottom:12px">Check the team members who serve each area of need. New requests show a routing suggestion based on this map.</p>
+    <div id="routingBlocks"></div>
+  </div>
+</section>
+</main>
+
+<!-- ============ REQUEST DETAIL OVERLAY ============ -->
+<div class="overlay" id="detailOverlay" onclick="if(event.target===this)closeDetail()">
+  <div class="panel" role="dialog" aria-modal="true">
+    <h3 id="dName"></h3>
+    <div class="route-hint hide" id="dRoute"></div>
+    <dl class="kv" id="dKv"></dl>
+    <div class="grid2 row">
+      <div><label class="fl" for="dStatus">Status</label><select id="dStatus"></select></div>
+      <div><label class="fl" for="dAssign">Assigned to</label><select id="dAssign"></select></div>
+    </div>
+    <div class="panel-actions">
+      <button class="btn ghost sm" onclick="closeDetail()">Close</button>
+      <button class="btn sm" id="dSave" onclick="saveDetail()">Save Changes</button>
+    </div>
+    <p class="formerr" id="dErr"></p>
+  </div>
+</div>
+
+<footer class="site">
+  <div class="inner">
+    <div>
+      <div class="fmark">Ignite Church &middot; Care Team</div>
+      <div>925 30th Ave S, Moorhead, MN 56560 &middot; 218.443.1462</div>
+    </div>
+    <div><a href="#" id="staffLink" onclick="showView('login');return false;">Staff Login</a></div>
+  </div>
+</footer>
+
+<script>
+/* ================= BAKED_CONFIG =================
+   Set both values before deploy, then redeploy.
+   The anon key is safe to publish ONLY after the
+   RLS policies in docs.html have been applied.   */
+const BAKED_CONFIG = {
+  SUPABASE_URL: "https://zcrksrnpmhizonnzgknv.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_NUejDbOP0-EPcRnZFH6-yQ_SuwGp-aC"
+};
+/* ================================================ */
+
+const APP_VERSION = "V1.02";
+const NEEDS = [
+  "Miscarriage",
+  "Stillbirth",
+  "Infertility",
+  "In vitro fertilization (IVF)",
+  "Postpartum anxiety or depression",
+  "Child born with special needs",
+  "Serious child medical / health issues",
+  "Other tragedy or trauma"
+];
+const STATUSES = [
+  {v:"new",       l:"New",               cls:"b-new"},
+  {v:"assigned",  l:"Assigned",          cls:"b-assigned"},
+  {v:"contacted", l:"Contacted",         cls:"b-contacted"},
+  {v:"walking",   l:"Walking Alongside", cls:"b-walking"},
+  {v:"closed",    l:"Closed",            cls:"b-closed"}
+];
+const statusMeta = v => STATUSES.find(s=>s.v===v) || STATUSES[0];
+
+const configured = !!(BAKED_CONFIG.SUPABASE_URL && BAKED_CONFIG.SUPABASE_ANON_KEY);
+const sb = configured ? supabase.createClient(BAKED_CONFIG.SUPABASE_URL, BAKED_CONFIG.SUPABASE_ANON_KEY) : null;
+
+let me = null;            // {id, full_name, email, role}
+let staff = [];           // staff_profiles
+let requests = [];        // care_requests
+let routing = [];         // need_routing rows
+let tasks = [];           // tasks
+let detailId = null;
+
+/* ---------- view switching ---------- */
+function showView(name){
+  ["public","success","login","portal"].forEach(v=>{
+    document.getElementById("view-"+v).classList.toggle("hide", v!==name);
+  });
+  window.scrollTo(0,0);
+}
+
+/* ---------- intake form ---------- */
+const needChecks = document.getElementById("needChecks");
+NEEDS.forEach((n,i)=>{
+  const lb = document.createElement("label");
+  lb.innerHTML = `<input type="checkbox" value="${n}"><span>${n}</span>`;
+  needChecks.appendChild(lb);
+});
+needChecks.addEventListener("change", refreshPrimary);
+function refreshPrimary(){
+  const checked = [...needChecks.querySelectorAll("input:checked")].map(c=>c.value);
+  const blk = document.getElementById("primaryBlock");
+  const sel = document.getElementById("f_primary");
+  if(checked.length > 1){
+    const cur = sel.value;
+    sel.innerHTML = `<option value="">Select one…</option>` + checked.map(c=>`<option ${c===cur?"selected":""}>${c}</option>`).join("");
+    blk.classList.remove("hide");
+  } else {
+    blk.classList.add("hide");
+    sel.innerHTML = "";
+  }
+}
+document.querySelectorAll('input[name=relstatus]').forEach(r=>{
+  r.addEventListener("change", ()=>{
+    const v = document.querySelector('input[name=relstatus]:checked').value;
+    const blk = document.getElementById("partnerBlock");
+    if(v==="single"){ blk.classList.add("hide"); return; }
+    const word = v==="married" ? "Spouse's" : "Partner's";
+    document.getElementById("pFirstLabel").textContent = word+" first name";
+    document.getElementById("pLastLabel").textContent  = word+" last name";
+    blk.classList.remove("hide");
+  });
+});
+
+document.getElementById("intakeForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const err = document.getElementById("formErr");
+  err.style.display="none";
+  const fail = m => { err.textContent = m; err.style.display="block"; };
+
+  const first = v("f_first"), last = v("f_last"), email = v("f_email");
+  const rel = pick("relstatus"), home = pick("homechurch"), lg = pick("lifegroup");
+  const checked = [...needChecks.querySelectorAll("input:checked")].map(c=>c.value);
+
+  if(!first || !last) return fail("Please enter your first and last name.");
+  if(!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return fail("Please enter a valid email address.");
+  if(!rel) return fail("Please select your relationship status.");
+  if(!home || !lg) return fail("Please answer the two church home questions.");
+  if(checked.length===0) return fail("Please select at least one area where we can care for you.");
+  let primary = checked.length===1 ? checked[0] : v("f_primary");
+  if(!primary) return fail("Please tell us which area feels most pressing.");
+
+  if(!configured){ document.getElementById("cfgNotice").classList.remove("hide"); return; }
+
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true; btn.textContent = "Sending…";
+  const rec = {
+    first_name:first, last_name:last,
+    gender: pick("gender") || null,
+    relationship_status: rel,
+    partner_first_name: rel==="single"? null : (v("p_first")||null),
+    partner_last_name:  rel==="single"? null : (v("p_last")||null),
+    email, phone: v("f_phone")||null,
+    preferred_contact: pick("prefcontact"),
+    home_church: home==="yes", life_group: lg==="yes",
+    needs: checked, primary_need: primary,
+    details: v("f_details")||null
+  };
+  const { error } = await sb.from("care_requests").insert(rec);
+  btn.disabled = false; btn.textContent = "Request Care";
+  if(error) return fail("Something went wrong sending your request. Please try again, or contact the church office at 218.443.1462.");
+  showView("success");
+});
+function v(id){ return document.getElementById(id).value.trim(); }
+function pick(name){ const el=document.querySelector(`input[name=${name}]:checked`); return el?el.value:null; }
+
+/* ---------- auth ---------- */
+document.getElementById("loginForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const err = document.getElementById("loginErr");
+  err.style.display="none";
+  if(!configured){ err.textContent="App is not connected to Supabase yet (see docs)."; err.style.display="block"; return; }
+  const { error } = await sb.auth.signInWithPassword({ email:v("l_email"), password:document.getElementById("l_pass").value });
+  if(error){ err.textContent="Sign-in failed: "+error.message; err.style.display="block"; return; }
+  await enterPortal();
+});
+async function enterPortal(){
+  const { data:{ user } } = await sb.auth.getUser();
+  if(!user) return;
+  const { data:prof, error } = await sb.from("staff_profiles").select("*").eq("id", user.id).single();
+  if(error || !prof){
+    alert("Your login works, but no staff profile exists for this account yet. An admin must add your profile row (see docs).");
+    await sb.auth.signOut();
+    return;
+  }
+  me = prof;
+  document.getElementById("hdrUser").textContent = prof.full_name + (prof.role==="admin" ? " (Admin)" : "");
+  document.getElementById("hdrUser").classList.remove("hide");
+  document.getElementById("hdrSignOut").classList.remove("hide");
+  const isAdmin = prof.role==="admin";
+  document.getElementById("tabTasksBtn").classList.toggle("hide", !isAdmin);
+  document.getElementById("tabTeamBtn").classList.toggle("hide", !isAdmin);
+  showView("portal");
+  await loadAll();
+  switchTab("requests");
+}
+async function signOut(){
+  if(sb) await sb.auth.signOut();
+  me = null;
+  document.getElementById("hdrUser").classList.add("hide");
+  document.getElementById("hdrSignOut").classList.add("hide");
+  showView("public");
+}
+
+/* ---------- portal data ---------- */
+async function loadAll(){
+  const [r1,r2,r3,r4] = await Promise.all([
+    sb.from("care_requests").select("*").order("created_at",{ascending:false}),
+    sb.from("staff_profiles").select("*").order("full_name"),
+    sb.from("need_routing").select("*"),
+    me.role==="admin" ? sb.from("tasks").select("*").order("created_at",{ascending:false}) : Promise.resolve({data:[]})
+  ]);
+  requests = r1.data||[]; staff = r2.data||[]; routing = r3.data||[]; tasks = r4.data||[];
+  buildFilters();
+  renderRequests(); renderStats();
+  if(me.role==="admin"){ renderTasks(); renderTeam(); }
+}
+
+/* ---------- tabs ---------- */
+document.getElementById("portalTabs").addEventListener("click", e=>{
+  if(e.target.dataset.tab) switchTab(e.target.dataset.tab);
+});
+function switchTab(t){
+  document.querySelectorAll("#portalTabs button").forEach(b=>b.classList.toggle("active", b.dataset.tab===t));
+  ["requests","stats","tasks","team"].forEach(x=>document.getElementById("tab-"+x).classList.toggle("hide", x!==t));
+}
+
+/* ---------- requests list ---------- */
+function buildFilters(){
+  const fs = document.getElementById("fltStatus");
+  fs.innerHTML = `<option value="">All statuses</option>` + STATUSES.map(s=>`<option value="${s.v}">${s.l}</option>`).join("");
+  const fn = document.getElementById("fltNeed");
+  fn.innerHTML = `<option value="">All areas of need</option>` + NEEDS.map(n=>`<option>${n}</option>`).join("");
+  fs.onchange = renderRequests; fn.onchange = renderRequests;
+}
+function staffName(id){ const s = staff.find(x=>x.id===id); return s ? s.full_name : "—"; }
+function renderRequests(){
+  const fs = document.getElementById("fltStatus").value;
+  const fn = document.getElementById("fltNeed").value;
+  const list = document.getElementById("reqList");
+  const rows = requests.filter(r => (!fs || r.status===fs) && (!fn || r.primary_need===fn || (r.needs||[]).includes(fn)));
+  document.getElementById("reqEmpty").classList.toggle("hide", rows.length>0);
+  list.innerHTML = rows.map(r=>{
+    const sm = statusMeta(r.status);
+    const d = new Date(r.created_at).toLocaleDateString();
+    return `<div class="list-item" onclick="openDetail('${r.id}')">
+      <div class="li-main">
+        <div class="li-name">${esc(r.first_name)} ${esc(r.last_name)}</div>
+        <div class="li-sub">${esc(r.primary_need)} &middot; ${d} &middot; Assigned: ${esc(staffName(r.assigned_to))}</div>
+      </div>
+      <div class="li-side"><span class="badge ${sm.cls}">${sm.l}</span></div>
+    </div>`;
+  }).join("");
+}
+function esc(s){ return (s??"").toString().replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+/* ---------- request detail ---------- */
+function openDetail(id){
+  detailId = id;
+  const r = requests.find(x=>x.id===id); if(!r) return;
+  document.getElementById("dName").textContent = r.first_name+" "+r.last_name;
+  const partner = r.partner_first_name ? `${r.partner_first_name} ${r.partner_last_name||""}`.trim() : "—";
+  const relLabel = {single:"Single",married:"Married",dating:"Dating"}[r.relationship_status]||r.relationship_status;
+  const pcLabel = {email:"Email",call:"Phone call",text:"Text"}[r.preferred_contact]||"—";
+  const kv = [
+    ["Submitted", new Date(r.created_at).toLocaleString()],
+    ["Email", r.email],
+    ["Phone", r.phone||"—"],
+    ["Preferred contact", pcLabel],
+    ["Gender", r.gender ? r.gender[0].toUpperCase()+r.gender.slice(1) : "—"],
+    ["Relationship", relLabel + (r.relationship_status!=="single" ? ` (${r.relationship_status==="married"?"spouse":"partner"}: ${esc(partner)})` : "")],
+    ["Home church", r.home_church ? "Ignite" : "Other / none"],
+    ["Life group", r.life_group ? "Yes" : "No"],
+    ["Areas of need", (r.needs||[]).join(", ")],
+    ["Primary need", r.primary_need],
+    ["Their words", r.details||"—"]
+  ];
+  document.getElementById("dKv").innerHTML = kv.map(([k,val])=>`<dt>${k}</dt><dd>${esc(val)}</dd>`).join("");
+
+  // routing suggestion
+  const routed = routing.filter(x=>x.need_area===r.primary_need).map(x=>staffName(x.staff_id)).filter(n=>n!=="—");
+  const rh = document.getElementById("dRoute");
+  if(routed.length){ rh.textContent = "Routing map for “"+r.primary_need+"”: "+routed.join(", "); rh.classList.remove("hide"); }
+  else rh.classList.add("hide");
+
+  document.getElementById("dStatus").innerHTML = STATUSES.map(s=>`<option value="${s.v}" ${s.v===r.status?"selected":""}>${s.l}</option>`).join("");
+  document.getElementById("dAssign").innerHTML = `<option value="">Unassigned</option>` + staff.map(s=>`<option value="${s.id}" ${s.id===r.assigned_to?"selected":""}>${esc(s.full_name)}</option>`).join("");
+  document.getElementById("dErr").style.display="none";
+  document.getElementById("detailOverlay").classList.add("open");
+}
+function closeDetail(){ document.getElementById("detailOverlay").classList.remove("open"); detailId=null; }
+async function saveDetail(){
+  const r = requests.find(x=>x.id===detailId); if(!r) return;
+  let status = document.getElementById("dStatus").value;
+  const assigned = document.getElementById("dAssign").value || null;
+  if(status==="new" && assigned) status = "assigned"; // auto-bump
+  const { error } = await sb.from("care_requests").update({status, assigned_to:assigned}).eq("id", detailId);
+  const derr = document.getElementById("dErr");
+  if(error){ derr.textContent="Save failed: "+error.message; derr.style.display="block"; return; }
+  r.status = status; r.assigned_to = assigned;
+  renderRequests(); renderStats(); closeDetail();
+}
+
+/* ---------- statistics ---------- */
+function renderStats(){
+  const total = requests.length;
+  const open = requests.filter(r=>r.status!=="closed").length;
+  const home = requests.filter(r=>r.home_church).length;
+  const lg = requests.filter(r=>r.life_group).length;
+  const pct = n => total ? Math.round(n/total*100)+"%" : "—";
+  document.getElementById("statCards").innerHTML = [
+    [total,"Total requests"],[open,"Open cases"],[pct(home),"Ignite home church"],[pct(lg),"In a life group"]
+  ].map(([n,l])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
+
+  const bar = (label,count,max)=>`<div class="barrow"><span>${esc(label)}</span><span class="bar"><i style="width:${max?Math.round(count/max*100):0}%"></i></span><span class="cnt">${count}</span></div>`;
+
+  const needCounts = NEEDS.map(n=>[n, requests.filter(r=>(r.needs||[]).includes(n)).length]);
+  const nm = Math.max(1,...needCounts.map(x=>x[1]));
+  document.getElementById("needBars").innerHTML = needCounts.map(([n,c])=>bar(n,c,nm)).join("");
+
+  const stCounts = STATUSES.map(s=>[s.l, requests.filter(r=>r.status===s.v).length]);
+  const sm2 = Math.max(1,...stCounts.map(x=>x[1]));
+  document.getElementById("statusBars").innerHTML = stCounts.map(([n,c])=>bar(n,c,sm2)).join("");
+
+  const demo = [
+    ["Female", requests.filter(r=>r.gender==="female").length],
+    ["Male", requests.filter(r=>r.gender==="male").length],
+    ["Not specified", requests.filter(r=>!r.gender||r.gender==="unspecified").length],
+    ["Married", requests.filter(r=>r.relationship_status==="married").length],
+    ["Dating", requests.filter(r=>r.relationship_status==="dating").length],
+    ["Single", requests.filter(r=>r.relationship_status==="single").length]
+  ];
+  const dm = Math.max(1,...demo.map(x=>x[1]));
+  document.getElementById("demoBars").innerHTML = demo.map(([n,c])=>bar(n,c,dm)).join("");
+}
+
+/* ---------- tasks (admin) ---------- */
+function renderTasks(){
+  document.getElementById("t_assignee").innerHTML = staff.map(s=>`<option value="${s.id}">${esc(s.full_name)}</option>`).join("");
+  document.getElementById("t_request").innerHTML = `<option value="">—</option>` + requests.map(r=>`<option value="${r.id}">${esc(r.first_name+" "+r.last_name)} — ${esc(r.primary_need)}</option>`).join("");
+  const list = document.getElementById("taskList");
+  document.getElementById("taskEmpty").classList.toggle("hide", tasks.length>0);
+  list.innerHTML = tasks.map(t=>{
+    const req = requests.find(r=>r.id===t.request_id);
+    return `<div class="trow ${t.status==='done'?'done':''}">
+      <div class="t-main">
+        <div class="t-name">${esc(t.title)}</div>
+        <div class="t-sub">${esc(t.description||"")}${t.description?" · ":""}Assigned: ${esc(staffName(t.assigned_to))}${t.due_date?" · Due "+t.due_date:""}${req?" · Re: "+esc(req.first_name+" "+req.last_name):""}</div>
+      </div>
+      <div class="li-side">
+        <button class="btn ghost sm" onclick="toggleTask('${t.id}')">${t.status==='done'?"Reopen":"Mark done"}</button>
+        <button class="btn danger sm" onclick="deleteTask('${t.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+async function createTask(){
+  const err = document.getElementById("taskErr"); err.style.display="none";
+  const title = v("t_title");
+  if(!title){ err.textContent="Task needs a title."; err.style.display="block"; return; }
+  const rec = {
+    title, description: v("t_desc")||null,
+    assigned_to: document.getElementById("t_assignee").value||null,
+    request_id: document.getElementById("t_request").value||null,
+    due_date: document.getElementById("t_due").value||null,
+    created_by: me.id
+  };
+  const { data, error } = await sb.from("tasks").insert(rec).select().single();
+  if(error){ err.textContent="Could not add task: "+error.message; err.style.display="block"; return; }
+  tasks.unshift(data);
+  ["t_title","t_desc","t_due"].forEach(id=>document.getElementById(id).value="");
+  renderTasks();
+}
+async function toggleTask(id){
+  const t = tasks.find(x=>x.id===id); if(!t) return;
+  const status = t.status==="done" ? "open" : "done";
+  const { error } = await sb.from("tasks").update({status}).eq("id",id);
+  if(!error){ t.status=status; renderTasks(); }
+}
+async function deleteTask(id){
+  if(!confirm("Delete this task?")) return;
+  const { error } = await sb.from("tasks").delete().eq("id",id);
+  if(!error){ tasks = tasks.filter(t=>t.id!==id); renderTasks(); }
+}
+
+/* ---------- team & routing (admin) ---------- */
+function renderTeam(){
+  document.getElementById("staffList").innerHTML = staff.map(s=>`
+    <div class="trow">
+      <div class="t-main"><div class="t-name">${esc(s.full_name)}</div><div class="t-sub">${esc(s.email)}</div></div>
+      <div class="li-side">
+        <select onchange="changeRole('${s.id}', this.value)" ${s.id===me.id?"disabled":""}>
+          <option value="staff" ${s.role==="staff"?"selected":""}>Staff</option>
+          <option value="admin" ${s.role==="admin"?"selected":""}>Admin</option>
+        </select>
+      </div>
+    </div>`).join("");
+
+  document.getElementById("routingBlocks").innerHTML = NEEDS.map(n=>`
+    <div class="route-block">
+      <div class="rn">${esc(n)}</div>
+      <div class="checks">${staff.map(s=>{
+        const on = routing.some(r=>r.need_area===n && r.staff_id===s.id);
+        return `<label><input type="checkbox" ${on?"checked":""} onchange="toggleRoute('${esc(n)}','${s.id}',this.checked)"><span>${esc(s.full_name)}</span></label>`;
+      }).join("")}</div>
+    </div>`).join("");
+}
+async function changeRole(id, role){
+  const { error } = await sb.from("staff_profiles").update({role}).eq("id",id);
+  if(error){ alert("Role change failed: "+error.message); renderTeam(); return; }
+  const s = staff.find(x=>x.id===id); if(s) s.role = role;
+}
+async function toggleRoute(need, staffId, on){
+  if(on){
+    const { data, error } = await sb.from("need_routing").insert({need_area:need, staff_id:staffId}).select().single();
+    if(error){ alert("Routing update failed: "+error.message); renderTeam(); return; }
+    routing.push(data);
+  } else {
+    const row = routing.find(r=>r.need_area===need && r.staff_id===staffId);
+    if(!row) return;
+    const { error } = await sb.from("need_routing").delete().eq("id",row.id);
+    if(error){ alert("Routing update failed: "+error.message); renderTeam(); return; }
+    routing = routing.filter(r=>r.id!==row.id);
+  }
+}
+
+/* ---------- boot ---------- */
+(async function boot(){
+  if(configured){
+    const { data:{ session } } = await sb.auth.getSession();
+    if(session) await enterPortal();
+  }
+})();
+</script>
+</body>
+</html>

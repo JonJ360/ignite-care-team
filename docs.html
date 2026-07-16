@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Care Team App — Docs</title>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@600;700&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;background:#f0ebe0;color:#1f2937;font-size:15px;line-height:1.6;padding-bottom:40px}
+.wrap{max-width:760px;margin:0 auto;padding:18px 14px}
+/* hero */
+.hero{background:linear-gradient(135deg,#0f766e,#14b8a6);border-radius:20px;padding:28px 24px;color:#fff;box-shadow:0 8px 24px rgba(15,118,110,.25);margin-bottom:20px}
+.hero .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.85}
+.hero h1{font-family:'Josefin Sans',sans-serif;font-size:26px;font-weight:700;margin:8px 0 6px}
+.hero p{font-size:14px;opacity:.92;max-width:56ch}
+.hero .vpill{display:inline-block;margin-top:14px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:5px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600}
+/* cards */
+.card{background:#fff;border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:14px;overflow:hidden}
+.card-head{display:flex;align-items:center;gap:14px;padding:16px 18px;cursor:pointer;user-select:none}
+.card-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto}
+.ic-teal{background:#ccfbf1}.ic-yellow{background:#fef3c7}.ic-blue{background:#dbeafe}.ic-purple{background:#ede9fe}.ic-green{background:#dcfce7}.ic-red{background:#fee2e2}.ic-gray{background:#e5e7eb}
+.card-tt{flex:1;min-width:0}
+.card-title{font-family:'Josefin Sans',sans-serif;font-weight:700;font-size:16px;color:#111827}
+.card-sub{font-size:12.5px;color:#6b7280;margin-top:1px}
+.card-chevron{font-size:22px;color:#9ca3af;transition:transform .2s;flex:0 0 auto}
+.card.open .card-chevron{transform:rotate(90deg)}
+.card-detail{display:none;padding:4px 18px 20px;border-top:1px solid #f3f4f6}
+.card.open .card-detail{display:block}
+.card-detail h3{font-family:'Josefin Sans',sans-serif;font-size:14px;font-weight:700;color:#0f766e;margin:16px 0 6px}
+.card-detail p{margin-bottom:8px;font-size:14px}
+.card-detail ul,.card-detail ol{margin:0 0 10px 20px;font-size:14px}
+.card-detail li{margin-bottom:4px}
+code{font-family:'JetBrains Mono',monospace;font-size:12.5px;background:#f3f4f6;border-radius:5px;padding:1px 6px;color:#0f766e}
+pre{background:#111827;color:#e5e7eb;border-radius:10px;padding:14px;font-size:11.5px;line-height:1.55;overflow-x:auto;margin:8px 0 14px}
+pre code{background:none;padding:0;color:inherit}
+/* what's new yellow items */
+.wn-item{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fcd34d;border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.wn-item .wn-v{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:#92400e;letter-spacing:.08em}
+.wn-item .wn-t{font-weight:800;font-size:14px;margin:2px 0 6px}
+.wn-li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;margin-bottom:5px}
+.wn-dot{width:8px;height:8px;border-radius:50%;background:#d97706;margin-top:6px;flex:0 0 auto}
+/* tech notes blue blocks */
+.tech{border:1px solid #93c5fd;border-radius:12px;margin-bottom:10px;overflow:hidden}
+.tech-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;background:#eff6ff;cursor:pointer;font-weight:700;font-size:13.5px;color:#1e40af}
+.tech-h .tog{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:#3b82f6}
+.tech-b{display:none;padding:12px 14px;font-size:13.5px}
+.tech.open .tech-b{display:block}
+/* architecture layers */
+.layer{border-radius:12px;padding:12px 14px;margin-bottom:8px;font-size:13.5px}
+.layer b{font-family:'Josefin Sans',sans-serif;display:block;font-size:14px;margin-bottom:2px}
+.l-blue{background:#dbeafe;border:1px solid #93c5fd}
+.l-purple{background:#ede9fe;border:1px solid #c4b5fd}
+.l-green{background:#dcfce7;border:1px solid #86efac}
+.l-yellow{background:#fef3c7;border:1px solid #fcd34d}
+.layer-arrow{text-align:center;color:#9ca3af;font-size:16px;margin:2px 0}
+/* data flow */
+.flow{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
+.flow .n{width:28px;height:28px;border-radius:50%;background:#14b8a6;color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.flow .fx{font-size:13.5px;padding-top:3px}
+.flow .fx b{font-weight:800}
+/* schema tables */
+.schema-table{border-collapse:collapse;width:100%;margin:6px 0 14px;font-size:12.5px}
+.schema-table th{background:#fef3c7;border:1px solid #fcd34d;font-family:'Josefin Sans',sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:6px 8px;text-align:left}
+.schema-table td{border:1px solid #e5e7eb;padding:6px 8px;vertical-align:top;background:#fff}
+.schema-table td:first-child{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#0f766e;white-space:nowrap}
+/* security cards */
+.sec-card{border-radius:12px;padding:12px 14px;margin-bottom:8px;font-size:13.5px;border:1px solid}
+.s-green{background:#f0fdf4;border-color:#86efac}
+.s-red{background:#fef2f2;border-color:#fca5a5}
+.s-blue{background:#eff6ff;border-color:#93c5fd}
+.sec-card b{display:block;font-weight:800;margin-bottom:2px}
+/* steps */
+.step{display:flex;gap:12px;margin-bottom:12px}
+.step .n{width:26px;height:26px;border-radius:8px;background:#0f766e;color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.step .sx{font-size:13.5px;padding-top:2px}
+.accent{font-family:'JetBrains Mono',monospace;font-size:12px;color:#0f766e;font-weight:600}
+.doc-footer{text-align:center;font-size:12px;color:#6b7280;margin-top:26px;font-family:'JetBrains Mono',monospace}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hero">
+  <div class="eyebrow">360 Build · Ignite Church</div>
+  <h1>Care Team App — Documentation</h1>
+  <p>Public intake form + staff portal for the Ignite Church Care Team, Moorhead MN. GitHub Pages front end, Supabase backend, full Row Level Security.</p>
+  <span class="vpill">V1.02 · Last modified July 16, 2026 · source: care-team_v1_02.html</span>
+</div>
+
+<!-- 1 WHAT'S NEW -->
+<div class="card open">
+  <div class="card-head" onclick="tog(this)">
+    <div class="card-icon ic-yellow">📋</div>
+    <div class="card-tt"><div class="card-title">What's New for You</div><div class="card-sub">Release notes &amp; roadmap</div></div>
+    <div class="card-chevron">›</div>
+  </div>
+  <div class="card-detail">
+    <div class="wn-item">
+      <div class="wn-v">V1.02 · JUL 16 2026</div>
+      <div class="wn-t">Live config baked</div>
+      <div class="wn-li"><div class="wn-dot"></div><div>Supabase URL + publishable key baked into BAKED_CONFIG. RLS verified before baking: rowsecurity true on all 4 tables, 11 policies confirmed. Admin account provisioned. App is deploy-ready.</div></div>
+    </div>
+    <div class="wn-item">
+      <div class="wn-v">V1.01 · JUL 15 2026</div>
+      <div class="wn-t">Docs restyled</div>
+      <div class="wn-li"><div class="wn-dot"></div><div>Documentation rebuilt in the AR CRM doc format (this page). No app changes.</div></div>
+    </div>
+    <div class="wn-item">
+      <div class="wn-v">V1.00 · JUL 15 2026</div>
+      <div class="wn-t">Initial release</div>
+      <div class="wn-li"><div class="wn-dot"></div><div>Public intake form: name, optional gender, relationship status with dynamic spouse/partner fields, contact info + preferred method, home church &amp; life group, multi-select needs with primary designation, optional free text, consent line.</div></div>
+      <div class="wn-li"><div class="wn-dot"></div><div>Staff portal: email/password login, Requests list with filters, detail panel with routing suggestion, status pipeline, assignment.</div></div>
+      <div class="wn-li"><div class="wn-dot"></div><div>Admin-only: Tasks tab, Team &amp; Routing management (roles + need-area routing map).</div></div>
+      <div class="wn-li"><div class="wn-dot"></div><div>Statistics: totals, open cases, home church %, life group %, need-area bars, pipeline bars, demographics.</div></div>
+      <div class="wn-li"><div class="wn-dot"></div><div>Full schema + RLS SQL shipped in Schema Reference below.</div></div>
+    </div>
+    <h3>Roadmap / not built yet</h3>
+    <ul>
+      <li>Email notification to routed team members on new submission (needs a worker or Supabase Edge Function).</li>
+      <li>Case notes / contact log per request.</li>
+      <li>In-app staff account creation (currently via Supabase Auth dashboard).</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 2 TECHNICAL NOTES -->
+<div class="card">
+  <div class="card-head" onclick="tog(this)">
+    <div class="card-icon ic-blue">🔧</div>
+    <div class="card-tt"><div class="card-title">Technical Notes</div><div class="card-sub">Stack, patterns, conventions</div></div>
+    <div class="card-chevron">›</div>
+  </div>
+  <div class="card-detail">
+    <div class="tech"><div class="tech-h" onclick="togTech(this)">Stack <span class="tog">Expand ▶</span></div>
+      <div class="tech-b">Pattern A build: single-file plain HTML + vanilla JS, no build step. Supabase JS v2 via jsDelivr CDN. Google Fonts (Oswald + Inter in the app; this doc uses the standard doc set). Hosted on GitHub Pages as <code>index.html</code> + <code>docs.html</code>.</div>
+    </div>
+    <div class="tech"><div class="tech-h" onclick="togTech(this)">BAKED_CONFIG block <span class="tog">Expand ▶</span></div>
+      <div class="tech-b">Same convention as the Time Tracker / AR CRM: a <code>BAKED_CONFIG</code> block near the top of the script holds <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code>. Every delivered version ships with these baked once set. Currently empty pending project setup. With config empty, the form renders but submit shows a not-connected notice and staff login is disabled.</div>
+    </div>
+    <div class="tech"><div class="tech-h" onclick="togTech(this)">Versioning convention <span class="tog">Expand ▶</span></div>
+      <div class="tech-b">Source lives as <code>care-team_v1_XX.html</code> in the working directory. Every change bumps the version and delivers <code>index.html</code> + <code>docs.html</code> together, with What's New and Technical Notes updated each version.</div>
+    </div>
+    <div class="tech"><div class="tech-h" onclick="togTech(this)">Views &amp; state <span class="tog">Expand ▶</span></div>
+      <div class="tech-b">Four views in one file: public form, success, staff login, portal (tabs: Requests / Statistics / Tasks / Team &amp; Routing). All portal data loads in one parallel fetch on login. Statistics are computed client-side from the requests array — no extra queries. Assigning a New request auto-bumps status to Assigned. Admin tabs are hidden for staff role in the UI <em>and</em> blocked at the database by RLS.</div>
+    </div>
+    <div class="tech"><div class="tech-h" onclick="togTech(this)">Need areas &amp; statuses <span class="tog">Expand ▶</span></div>
+      <div class="tech-b">Eight need areas (stored verbatim as text): Miscarriage · Stillbirth · Infertility · In vitro fertilization (IVF) · Postpartum anxiety or depression · Child born with special needs · Serious child medical / health issues · Other tragedy or trauma. Statuses: <code>new → assigned → contacted → walking → closed</code> (displayed as New, Assigned, Contacted, Walking Alongside, Closed).</div>
+    </div>
+  </div>
+</div>
+
+<!-- 3 ARCHITECTURE MAP -->
+<div class="card">
+  <div class="card-head" onclick="tog(this)">
+    <div class="card-icon ic-purple">🗺️</div>
+    <div class="card-tt"><div class="card-title">Architecture Map</div><div class="card-sub">How the pieces stack</div></div>
+    <div class="card-chevron">›</div>
+  </div>
+  <div class="card-detail" style="padding-top:14px">
+    <div class="layer l-blue"><b>GitHub Pages — index.html + docs.html</b>Static hosting. Suggested repo: <code>jonj360.github.io/ignite-care-team</code>. QR code points here.</div>
+    <div class="layer-arrow">▼</div>
+    <div class="layer l-yellow"><b>Public form (anon key)</b>Insert-only writes to <code>care_requests</code>. No reads possible with the anon key.</div>
+    <div class="layer-arrow">▼</div>
+    <div class="layer l-green"><b>Supabase Auth (email + password)</b>Staff sessions. Accounts created in the Auth dashboard; role lives in <code>staff_profiles</code>.</div>
+    <div class="layer-arrow">▼</div>
+    <div class="layer l-purple"><b>Supabase Postgres + RLS</b>Four tables: care_requests, staff_profiles, need_routing, tasks. Admin writes gated by a security-definer <code>is_admin()</code> function — enforced in the database, not just the UI.</div>
+  </div>
+</div>
+
+<!-- 4 DATA FLOW -->
+<div class="card">
+  <div class="card-head" onclick="tog(this)">
+    <div class="card-icon ic-teal">⚡</div>
+    <div class="card-tt"><div class="card-title">Data Flow</div><div class="card-sub">QR scan to closed case</div></div>
+    <div class="card-chevron">›</div>
+  </div>
+  <div class="card-detail" style="padding-top:14px">
+    <div class="flow"><div class="n">1</div><div class="fx"><b>Scan.</b> Person scans the QR code and opens the intake form.</div></div>
+    <div class="flow"><div class="n">2</div><div class="fx"><b>Submit.</b> Form validates and inserts a row into <code>care_requests</code> with status <b>New</b> using the anon key.</div></div>
+    <div class="flow"><div class="n">3</div><div class="fx"><b>Review.</b> Admin opens the Requests tab; New requests carry the gold badge.</div></div>
+    <div class="flow"><div class="n">4</div><div class="fx"><b>Route.</b> The detail panel shows the routing suggestion — team members mapped to the request's primary need.</div></div>
+    <div class="flow"><div class="n">5</div><div class="fx"><b>Assign.</b> Admin assigns a team member; status auto-bumps to <b>Assigned</b>.</div></div>
+    <div class="flow"><div class="n">6</div><div class="fx"><b>Walk.</b> Status progresses: Contacted → Walking Alongside as the team member connects and journeys with the family.</div></div>
+    <div class="flow"><div class="n">7</div><div class="fx"><b>Close.</b> Case marked <b>Closed</b>. Statistics update live from the same data.</div></div>
+  </div>
+</div>
+
+<!-- 5 SCHEMA REFERENCE -->
+<div class="card">
+  <div class="card-head" onclick="tog(this)">
+    <div class="card-icon ic-yellow">📚</div>
+    <div class="card-tt"><div class="card-title">Schema Reference</div><div class="card-sub">Tables, fields, full SQL + RLS</div></div>
+    <div class="card-chevron">›</div>
+  </div>
+  <div class="card-detail">
+    <h3>care_requests</h3>
+    <table class="schema-table">
+      <tr><th>Field</th><th>Type</th><th>Notes</th></tr>
+      <tr><td>id</td><td>uuid pk</td><td>gen_random_uuid()</td></tr>
+      <tr><td>created_at</td><td>timestamptz</td><td>default now()</td></tr>
+      <tr><td>first_name / last_name</td><td>text</td><td>required</td></tr>
+      <tr><td>gender</td><td>text</td><td>female | male | unspecified · nullable</td></tr>
+      <tr><td>relationship_status</td><td>text</td><td>single | married | dating</td></tr>
+      <tr><td>partner_first_name / partner_last_name</td><td>text</td><td>nullable · form label dynamic (Spouse / Partner)</td></tr>
+      <tr><td>email</td><td>text</td><td>required</td></tr>
+      <tr><td>phone</td><td>text</td><td>nullable</td></tr>
+      <tr><td>preferred_contact</td><td>text</td><td>email | call | text</td></tr>
+      <tr><td>home_church / life_group</td><td>boolean</td><td>required</td></tr>
+      <tr><td>needs</td><td>text[]</td><td>multi-select, one or more of the eight areas</td></tr>
+      <tr><td>primary_need</td><td>text</td><td>auto when one checked, user-picked when multiple</td></tr>
+      <tr><td>details</td><td>text</td><td>optional free text</td></tr>
+      <tr><td>status</td><td>text</td><td>new | assigned | contacted | walking | closed</td></tr>
+      <tr><td>assigned_to</td><td>uuid fk</td><td>→ staff_profiles · nullable</td></tr>
+    </table>
+    <h3>staff_profiles</h3>
+    <table class="schema-table">
+      <tr><th>Field</th><th>Type</th><th>Notes</th></tr>
+      <tr><td>id</td><td>uuid pk fk</td><td>→ auth.users (same id)</td></tr>
+      <tr><td>full_name</td><td>text</td><td></td></tr>
+      <tr><td>email</td><td>text</td><td>display copy</td></tr>
+      <tr><td>role</td><td>text</td><td>admin | staff (default staff)</td></tr>
+      <tr><td>created_at</td><td>timestamptz</td><td>default now()</td></tr>
+    </table>
+    <h3>need_routing</h3>
+    <table class="schema-table">
+      <tr><th>Field</th><th>Type</th><th>Notes</th></tr>
+      <tr><td>id</td><td>uuid pk</td><td></td></tr>
+      <tr><td>need_area</td><td>text</td><td>one of the eight areas, stored verbatim</td></tr>
+      <tr><td>staff_id</td><td>uuid fk</td><td>→ staff_profiles · unique with need_area</td></tr>
+    </table>
+    <h3>tasks</h3>
+    <table class="schema-table">
+      <tr><th>Field</th><th>Type</th><th>Notes</th></tr>
+      <tr><td>id</td><td>uuid pk</td><td></td></tr>
+      <tr><td>created_at</td><td>timestamptz</td><td>default now()</td></tr>
+      <tr><td>title</td><td>text</td><td>required</td></tr>
+      <tr><td>description</td><td>text</td><td>nullable</td></tr>
+      <tr><td>assigned_to</td><td>uuid fk</td><td>→ staff_profiles · nullable</td></tr>
+      <tr><td>request_id</td><td>uuid fk</td><td>→ care_requests · nullable case link</td></tr>
+      <tr><td>due_date</td><td>date</td><td>nullable</td></tr>
+      <tr><td>status</td><td>text</td><td>open | done</td></tr>
+      <tr><td>created_by</td><td>uuid fk</td><td>→ staff_profiles</td></tr>
+    </table>
+    <h3>Full SQL — run once in the Supabase SQL Editor</h3>
+<pre><code>-- ========== TABLES ==========
+create table staff_profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  full_name text not null,
+  email text not null,
+  role text not null default 'staff' check (role in ('admin','staff')),
+  created_at timestamptz not null default now()
+);
+
+create table care_requests (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  first_name text not null,
+  last_name text not null,
+  gender text check (gender in ('female','male','unspecified')),
+  relationship_status text not null check (relationship_status in ('single','married','dating')),
+  partner_first_name text,
+  partner_last_name text,
+  email text not null,
+  phone text,
+  preferred_contact text check (preferred_contact in ('email','call','text')),
+  home_church boolean not null,
+  life_group boolean not null,
+  needs text[] not null,
+  primary_need text not null,
+  details text,
+  status text not null default 'new' check (status in ('new','assigned','contacted','walking','closed')),
+  assigned_to uuid references staff_profiles(id)
+);
+
+create table need_routing (
+  id uuid primary key default gen_random_uuid(),
+  need_area text not null,
+  staff_id uuid not null references staff_profiles(id) on delete cascade,
+  unique (need_area, staff_id)
+);
+
+create table tasks (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  title text not null,
+  description text,
+  assigned_to uuid references staff_profiles(id),
+  request_id uuid references care_requests(id) on delete set null,
+  due_date date,
+  status text not null default 'open' check (status in ('open','done')),
+  created_by uuid references staff_profiles(id)
+);
+
+-- ========== ADMIN CHECK (security definer avoids RLS recursion) ==========
+create or replace function is_admin() returns boolean
+language sql security definer set search_path = public stable as $$
+  select exists (
+    select 1 from staff_profiles
+    where id = auth.uid() and role = 'admin'
+  );
+$$;
+
+-- ========== ROW LEVEL SECURITY ==========
+alter table care_requests  enable row level security;
+alter table staff_profiles enable row level security;
+alter table need_routing   enable row level security;
+alter table tasks          enable row level security;
+
+-- care_requests: public may INSERT only; all staff read/update
+create policy "public insert" on care_requests
+  for insert to anon, authenticated with check (true);
+create policy "staff read" on care_requests
+  for select to authenticated using (true);
+create policy "staff update" on care_requests
+  for update to authenticated using (true) with check (true);
+
+-- staff_profiles: authenticated read; admin manages
+create policy "staff read profiles" on staff_profiles
+  for select to authenticated using (true);
+create policy "admin insert profiles" on staff_profiles
+  for insert to authenticated with check (is_admin());
+create policy "admin update profiles" on staff_profiles
+  for update to authenticated using (is_admin()) with check (is_admin());
+create policy "admin delete profiles" on staff_profiles
+  for delete to authenticated using (is_admin());
+
+-- need_routing: authenticated read; admin manages
+create policy "staff read routing" on need_routing
+  for select to authenticated using (true);
+create policy "admin write routing" on need_routing
+  for all to authenticated using (is_admin()) with check (is_admin());
+
+-- tasks: authenticated read; admin manages
+create policy "staff read tasks" on tasks
+  for select to authenticated using (true);
+create policy "admin write tasks" on tasks
+  for all to authenticated using (is_admin()) with check (is_admin());</code></pre>
+  </div>
+</div>
+
+<!-- 6 SETUP GUIDE -->
+<div class="card">
+  <div class="card-head" onclick="tog(this)">
+    <div class="card-icon ic-green">🚀</div>
+    <div class="card-tt"><div class="card-title">Setup Guide</div><div class="card-sub">Zero to live in 8 steps</div></div>
+    <div class="card-chevron">›</div>
+  </div>
+  <div class="card-detail" style="padding-top:14px">
+    <div class="step"><div class="n">1</div><div class="sx">Create (or reuse) a Supabase project. Run the full SQL block from Schema Reference in the SQL Editor.</div></div>
+    <div class="step"><div class="n">2</div><div class="sx">Auth → Users → Add user: create the admin account (<code>jonj@360-llc.com</code>) with a temp password meeting the project's password policy. Copy the user's UUID.</div></div>
+    <div class="step"><div class="n">3</div><div class="sx">Insert the admin profile row:<pre style="margin-top:8px"><code>insert into staff_profiles (id, full_name, email, role)
+values ('&lt;ADMIN-AUTH-UUID&gt;', 'Jon Jacobson', 'jonj@360-llc.com', 'admin');</code></pre></div></div>
+    <div class="step"><div class="n">4</div><div class="sx">In <code>index.html</code>, set <code>BAKED_CONFIG.SUPABASE_URL</code> and <code>BAKED_CONFIG.SUPABASE_ANON_KEY</code> (Project Settings → API).</div></div>
+    <div class="step"><div class="n">5</div><div class="sx">Push <code>index.html</code> + <code>docs.html</code> to GitHub Pages. Suggested repo: <code>jonj360.github.io/ignite-care-team</code>.</div></div>
+    <div class="step"><div class="n">6</div><div class="sx">Generate the QR code pointing at the Pages URL.</div></div>
+    <div class="step"><div class="n">7</div><div class="sx">Add remaining staff: create each user in Auth, then (as admin) their <code>staff_profiles</code> row. They appear immediately in the portal.</div></div>
+    <div class="step"><div class="n">8</div><div class="sx">Portal → Team &amp; Routing: check which members serve each of the eight need areas.</div></div>
+  </div>
+</div>
+
+<!-- 7 SECURITY NOTES -->
+<div class="card">
+  <div class="card-head" onclick="tog(this)">
+    <div class="card-icon ic-red">🔒</div>
+    <div class="card-tt"><div class="card-title">Security Notes</div><div class="card-sub">What protects this data</div></div>
+    <div class="card-chevron">›</div>
+  </div>
+  <div class="card-detail" style="padding-top:14px">
+    <div class="sec-card s-red"><b>⚠️ Do not deploy the anon key before running the RLS script.</b> With RLS off, the anon key exposes every row publicly. This app stores pastoral-care data — pregnancy loss, postpartum mental health, child medical issues. Treat it accordingly.</div>
+    <div class="sec-card s-green"><b>Insert-only public access.</b> The anon key can write a new request and nothing else — no reads, no updates, no other tables.</div>
+    <div class="sec-card s-green"><b>Admin writes enforced in Postgres.</b> Roles, routing, and tasks require <code>is_admin()</code> (security-definer function) — hiding the tabs in the UI is convenience, the database is the gate.</div>
+    <div class="sec-card s-blue"><b>No credentials in the codebase.</b> Only the Supabase URL and anon key are baked. Passwords live exclusively in Supabase Auth. Full-visibility decision: all authenticated staff can read and update all requests.</div>
+  </div>
+</div>
+
+<!-- 8 DECISIONS & VERSION LOG -->
+<div class="card">
+  <div class="card-head" onclick="tog(this)">
+    <div class="card-icon ic-gray">🗓️</div>
+    <div class="card-tt"><div class="card-title">Decisions &amp; Version Log</div><div class="card-sub">Approved 7/15/26</div></div>
+    <div class="card-chevron">›</div>
+  </div>
+  <div class="card-detail">
+    <h3>Decisions log</h3>
+    <ul>
+      <li>Contact fields added — email required, phone + preferred method.</li>
+      <li>Optional gender field added for demographics.</li>
+      <li>Needs are multi-select with a primary designation + optional free text.</li>
+      <li>Partner labels dynamic (Spouse / Partner).</li>
+      <li>All authenticated staff see all requests; admin-only DB writes on roles / routing / tasks.</li>
+      <li>Consent line on the public form.</li>
+    </ul>
+    <h3>Version history</h3>
+    <table class="schema-table">
+      <tr><th>Version</th><th>Date</th><th>Changes</th></tr>
+      <tr><td>V1.02</td><td>2026-07-16</td><td>Supabase config baked (project zcrksrnpmhizonnzgknv, publishable key). RLS verified live: 4/4 tables enforced, 11 policies. Admin account provisioned. No functional changes.</td></tr>
+      <tr><td>V1.01</td><td>2026-07-15</td><td>Docs restyled to AR CRM format. No app changes.</td></tr>
+      <tr><td>V1.00</td><td>2026-07-15</td><td>Initial build: public intake form, staff auth, requests + routing suggestion, status pipeline, admin tasks, team &amp; routing, statistics, full RLS schema.</td></tr>
+    </table>
+    <p class="accent">Statistics definitions: a request counts toward every need it selected, so need-area bars can total more than the request count. Open cases = status ≠ Closed. Home church / life group shown as % of all requests.</p>
+  </div>
+</div>
+
+<div class="doc-footer">Care Team App · Ignite Church, Moorhead MN · V1.02 · Built by 360 Solutions LLC</div>
+</div>
+
+<script>
+function tog(el){ el.parentElement.classList.toggle('open'); }
+function togTech(el){
+  var t = el.parentElement;
+  var o = t.classList.toggle('open');
+  el.querySelector('.tog').textContent = o ? 'Collapse ▼' : 'Expand ▶';
+}
+</script>
+</body>
+</html>
