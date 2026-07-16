@@ -44,9 +44,8 @@ header.site{
   display:flex;align-items:center;justify-content:space-between;gap:12px;
 }
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
-.logo svg{width:26px;height:32px;flex:0 0 auto}
-.wordmark{font-family:'Oswald',sans-serif;font-weight:700;font-size:18px;letter-spacing:.04em;text-transform:uppercase;line-height:1}
-.wordmark .gold{color:var(--gold-dark)}
+.wordmark{font-family:'Oswald',sans-serif;font-weight:700;font-size:18px;letter-spacing:.04em;text-transform:uppercase;line-height:1;color:#4A4A48}
+.wordmark .gold{color:#C9AE3F}
 .wordmark small{display:block;font-family:'Inter',sans-serif;font-weight:600;font-size:10px;letter-spacing:.22em;color:var(--muted);margin-top:3px}
 .hdr-right{font-size:12px;color:var(--muted);font-weight:500}
 .hdr-right button{background:none;border:1px solid var(--line);border-radius:6px;padding:6px 12px;font:inherit;color:var(--ink);cursor:pointer}
@@ -115,7 +114,6 @@ textarea{min-height:96px;resize:vertical}
 .notice{border:1px solid var(--line);background:#fff;border-radius:6px;padding:10px 14px;font-size:13px;color:var(--muted);margin-top:14px}
 /* success */
 .success{text-align:center;padding:44px 20px}
-.success .flame{width:46px;margin:0 auto 16px}
 /* ===== footer ===== */
 footer.site{
   background:var(--ink);color:var(--cream);padding:26px 20px;
@@ -197,11 +195,11 @@ footer .fmark{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-sp
 <div class="brandbar"></div>
 <header class="site">
   <a class="logo" href="#" onclick="showView('public');return false;">
-    <svg viewBox="0 0 24 30" aria-hidden="true"><path fill="#E5C444" d="M12 0c1.4 4.6 6.2 7.4 8.6 11.6 2.7 4.7 2 11-1.9 14.8C15 30 9 30 5.3 26.4 1.4 22.6.7 16.3 3.4 11.6 5.8 7.4 10.6 4.6 12 0z"/><path fill="#20251F" d="M12 10.5c.8 2.6 3.4 4.2 4.7 6.6 1.4 2.6 1 6-1.1 8.1-2 2-5.2 2-7.2 0-2.1-2.1-2.5-5.5-1.1-8.1 1.3-2.4 3.9-4 4.7-6.6z"/></svg>
     <span class="wordmark">IGNITE<span class="gold">CHURCH</span><small>CARE TEAM</small></span>
   </a>
   <div class="hdr-right">
     <span id="hdrUser" class="hide"></span>
+    <button id="hdrPass" class="hide" onclick="changePassword()">Password</button>
     <button id="hdrSignOut" class="hide" onclick="signOut()">Sign out</button>
   </div>
 </header>
@@ -303,7 +301,6 @@ footer .fmark{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-sp
 <!-- ============ SUCCESS VIEW ============ -->
 <section id="view-success" class="hide">
   <div class="card success">
-    <svg class="flame" viewBox="0 0 24 30" aria-hidden="true"><path fill="#E5C444" d="M12 0c1.4 4.6 6.2 7.4 8.6 11.6 2.7 4.7 2 11-1.9 14.8C15 30 9 30 5.3 26.4 1.4 22.6.7 16.3 3.4 11.6 5.8 7.4 10.6 4.6 12 0z"/><path fill="#20251F" d="M12 10.5c.8 2.6 3.4 4.2 4.7 6.6 1.4 2.6 1 6-1.1 8.1-2 2-5.2 2-7.2 0-2.1-2.1-2.5-5.5-1.1-8.1 1.3-2.4 3.9-4 4.7-6.6z"/></svg>
     <h1 class="display" style="font-size:26px">We've Received Your Request</h1>
     <div class="goldline" style="margin:14px auto 16px"></div>
     <p class="lede" style="margin:0 auto">Thank you for trusting us with this. A member of the Care Team will reach out to you personally, soon. You are not alone.</p>
@@ -379,8 +376,22 @@ footer .fmark{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-sp
 
   <!-- Team & Routing (admin) -->
   <div id="tab-team" class="hide">
+    <div class="inline-form">
+      <h2 class="sec">Add Staff Member</h2>
+      <div class="grid2 row">
+        <div><label class="fl" for="s_name">Full name</label><input type="text" id="s_name"></div>
+        <div><label class="fl" for="s_email">Email</label><input type="email" id="s_email"></div>
+      </div>
+      <div class="grid2 row">
+        <div><label class="fl" for="s_pass">Temp password</label><input type="text" id="s_pass" placeholder="8+ characters"></div>
+        <div><label class="fl" for="s_role">Role</label><select id="s_role"><option value="staff" selected>Staff</option><option value="admin">Admin</option></select></div>
+      </div>
+      <button class="btn sm" onclick="addStaff()">Create Account</button>
+      <p class="formerr" id="staffErr"></p>
+      <p class="mut" id="staffOk" style="display:none;margin-top:10px"></p>
+    </div>
     <h2 class="sec">Care Team Staff</h2>
-    <p class="mut" style="margin-bottom:12px">Accounts are created in the Supabase Auth dashboard, then appear here after their profile row is added (see docs). Roles can be changed below.</p>
+    <p class="mut" style="margin-bottom:12px">Give new members their temp password — they sign in via Staff Login and can change it with the Password button in the header. Roles can be changed below.</p>
     <div id="staffList"></div>
     <div class="spacer"></div>
     <h2 class="sec">Routing — Who Serves Each Area</h2>
@@ -412,7 +423,7 @@ footer .fmark{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-sp
   <div class="inner">
     <div>
       <div class="fmark">Ignite Church &middot; Care Team</div>
-      <div>925 30th Ave S, Moorhead, MN 56560 &middot; 218.443.1462</div>
+      <div>925 30th Ave S, Moorhead, MN 56560</div>
     </div>
     <div><a href="#" id="staffLink" onclick="showView('login');return false;">Staff Login</a></div>
   </div>
@@ -429,7 +440,7 @@ const BAKED_CONFIG = {
 };
 /* ================================================ */
 
-const APP_VERSION = "V1.02";
+const APP_VERSION = "V1.05";
 const NEEDS = [
   "Miscarriage",
   "Stillbirth",
@@ -536,7 +547,7 @@ document.getElementById("intakeForm").addEventListener("submit", async e=>{
   };
   const { error } = await sb.from("care_requests").insert(rec);
   btn.disabled = false; btn.textContent = "Request Care";
-  if(error) return fail("Something went wrong sending your request. Please try again, or contact the church office at 218.443.1462.");
+  if(error) return fail("Something went wrong sending your request. Please try again in a moment.");
   showView("success");
 });
 function v(id){ return document.getElementById(id).value.trim(); }
@@ -564,6 +575,7 @@ async function enterPortal(){
   me = prof;
   document.getElementById("hdrUser").textContent = prof.full_name + (prof.role==="admin" ? " (Admin)" : "");
   document.getElementById("hdrUser").classList.remove("hide");
+  document.getElementById("hdrPass").classList.remove("hide");
   document.getElementById("hdrSignOut").classList.remove("hide");
   const isAdmin = prof.role==="admin";
   document.getElementById("tabTasksBtn").classList.toggle("hide", !isAdmin);
@@ -576,6 +588,7 @@ async function signOut(){
   if(sb) await sb.auth.signOut();
   me = null;
   document.getElementById("hdrUser").classList.add("hide");
+  document.getElementById("hdrPass").classList.add("hide");
   document.getElementById("hdrSignOut").classList.add("hide");
   showView("public");
 }
@@ -800,6 +813,50 @@ async function toggleRoute(need, staffId, on){
     if(error){ alert("Routing update failed: "+error.message); renderTeam(); return; }
     routing = routing.filter(r=>r.id!==row.id);
   }
+}
+
+/* ---------- add staff (via create-staff edge function) ---------- */
+async function addStaff(){
+  const err = document.getElementById("staffErr"), ok = document.getElementById("staffOk");
+  err.style.display="none"; ok.style.display="none";
+  const fail = m => { err.textContent = m; err.style.display="block"; };
+  const full_name = v("s_name"), email = v("s_email");
+  const temp_password = document.getElementById("s_pass").value;
+  const role = document.getElementById("s_role").value;
+  if(!full_name || !email) return fail("Name and email are required.");
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return fail("Enter a valid email address.");
+  if(temp_password.length < 8) return fail("Temp password must be at least 8 characters.");
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session) return fail("Session expired — sign in again.");
+  let res, body;
+  try{
+    res = await fetch(BAKED_CONFIG.SUPABASE_URL + "/functions/v1/create-staff", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer "+session.access_token,
+        "apikey": BAKED_CONFIG.SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({ email, full_name, temp_password, role })
+    });
+    body = await res.json();
+  }catch(e){ return fail("Could not reach the create-staff function — confirm it's deployed (docs → Setup Guide)."); }
+  if(!res.ok) return fail(body && body.error ? body.error : "Create failed.");
+  staff.push(body.profile);
+  staff.sort((a,b)=>a.full_name.localeCompare(b.full_name));
+  renderTeam(); renderTasks();
+  ["s_name","s_email","s_pass"].forEach(id=>document.getElementById(id).value="");
+  ok.textContent = "Account created for "+body.profile.full_name+". Give them their temp password — they sign in via Staff Login and should change it using the Password button.";
+  ok.style.display="block";
+}
+
+/* ---------- change own password ---------- */
+async function changePassword(){
+  const np = prompt("New password (8+ characters):");
+  if(np===null) return;
+  if(np.length < 8){ alert("Password must be at least 8 characters."); return; }
+  const { error } = await sb.auth.updateUser({ password: np });
+  alert(error ? "Password change failed: "+error.message : "Password updated.");
 }
 
 /* ---------- boot ---------- */

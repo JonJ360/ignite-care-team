@@ -85,7 +85,7 @@ pre code{background:none;padding:0;color:inherit}
   <div class="eyebrow">360 Build · Ignite Church</div>
   <h1>Care Team App — Documentation</h1>
   <p>Public intake form + staff portal for the Ignite Church Care Team, Moorhead MN. GitHub Pages front end, Supabase backend, full Row Level Security.</p>
-  <span class="vpill">V1.02 · Last modified July 16, 2026 · source: care-team_v1_02.html</span>
+  <span class="vpill">V1.05 · Last modified July 16, 2026 · source: care-team_v1_05.html</span>
 </div>
 
 <!-- 1 WHAT'S NEW -->
@@ -96,6 +96,24 @@ pre code{background:none;padding:0;color:inherit}
     <div class="card-chevron">›</div>
   </div>
   <div class="card-detail">
+    <div class="wn-item">
+      <div class="wn-v">V1.05 · JUL 16 2026</div>
+      <div class="wn-t">Logo removed</div>
+      <div class="wn-li"><div class="wn-dot"></div><div>SVG flame marks removed from header and confirmation screen — wordmark only (IGNITE gray / CHURCH gold) until the real logo asset is available.</div></div>
+    </div>
+    <div class="wn-item">
+      <div class="wn-v">V1.04 · JUL 16 2026</div>
+      <div class="wn-t">Brand mark + phone removed</div>
+      <div class="wn-li"><div class="wn-dot"></div><div>Header and confirmation-screen marks rebuilt to match the official logo: gold flame with inner cutout inside an open ring, IGNITE gray / CHURCH gold wordmark.</div></div>
+      <div class="wn-li"><div class="wn-dot"></div><div>Church phone number removed from the footer and the form error message (not formal yet).</div></div>
+    </div>
+    <div class="wn-item">
+      <div class="wn-v">V1.03 · JUL 16 2026</div>
+      <div class="wn-t">In-portal staff creation + password change</div>
+      <div class="wn-li"><div class="wn-dot"></div><div>Team &amp; Routing tab: Add Staff Member form (name, email, temp password, role) — creates the auth user and profile row in one shot via the new <code>create-staff</code> Edge Function. Admin-gated server-side.</div></div>
+      <div class="wn-li"><div class="wn-dot"></div><div>Password button in the header for all signed-in staff to change their own password (temp passwords shouldn't live forever).</div></div>
+      <div class="wn-li"><div class="wn-dot"></div><div>Requires one-time deploy of the Edge Function — see Setup Guide step 9.</div></div>
+    </div>
     <div class="wn-item">
       <div class="wn-v">V1.02 · JUL 16 2026</div>
       <div class="wn-t">Live config baked</div>
@@ -119,7 +137,7 @@ pre code{background:none;padding:0;color:inherit}
     <ul>
       <li>Email notification to routed team members on new submission (needs a worker or Supabase Edge Function).</li>
       <li>Case notes / contact log per request.</li>
-      <li>In-app staff account creation (currently via Supabase Auth dashboard).</li>
+      
     </ul>
   </div>
 </div>
@@ -140,6 +158,9 @@ pre code{background:none;padding:0;color:inherit}
     </div>
     <div class="tech"><div class="tech-h" onclick="togTech(this)">Versioning convention <span class="tog">Expand ▶</span></div>
       <div class="tech-b">Source lives as <code>care-team_v1_XX.html</code> in the working directory. Every change bumps the version and delivers <code>index.html</code> + <code>docs.html</code> together, with What's New and Technical Notes updated each version.</div>
+    </div>
+    <div class="tech"><div class="tech-h" onclick="togTech(this)">Staff creation — create-staff Edge Function <span class="tog">Expand ▶</span></div>
+      <div class="tech-b">Creating auth users requires the service role key, which can never ship in a public page. The portal's Add Staff form POSTs to <code>/functions/v1/create-staff</code> with the admin's session token. The function verifies the token, confirms the caller's <code>staff_profiles.role = 'admin'</code>, creates the auth user auto-confirmed, inserts the profile row, and deletes the auth user if the profile insert fails (rollback). Source ships as <code>create-staff.ts</code>. Password changes use <code>sb.auth.updateUser</code> client-side — no function needed.</div>
     </div>
     <div class="tech"><div class="tech-h" onclick="togTech(this)">Views &amp; state <span class="tog">Expand ▶</span></div>
       <div class="tech-b">Four views in one file: public form, success, staff login, portal (tabs: Requests / Statistics / Tasks / Team &amp; Routing). All portal data loads in one parallel fetch on login. Statistics are computed client-side from the requests array — no extra queries. Assigning a New request auto-bumps status to Assigned. Admin tabs are hidden for staff role in the UI <em>and</em> blocked at the database by RLS.</div>
@@ -354,8 +375,9 @@ values ('&lt;ADMIN-AUTH-UUID&gt;', 'Jon Jacobson', 'jonj@360-llc.com', 'admin');
     <div class="step"><div class="n">4</div><div class="sx">In <code>index.html</code>, set <code>BAKED_CONFIG.SUPABASE_URL</code> and <code>BAKED_CONFIG.SUPABASE_ANON_KEY</code> (Project Settings → API).</div></div>
     <div class="step"><div class="n">5</div><div class="sx">Push <code>index.html</code> + <code>docs.html</code> to GitHub Pages. Suggested repo: <code>jonj360.github.io/ignite-care-team</code>.</div></div>
     <div class="step"><div class="n">6</div><div class="sx">Generate the QR code pointing at the Pages URL.</div></div>
-    <div class="step"><div class="n">7</div><div class="sx">Add remaining staff: create each user in Auth, then (as admin) their <code>staff_profiles</code> row. They appear immediately in the portal.</div></div>
+    <div class="step"><div class="n">7</div><div class="sx">Add remaining staff from the portal: Team &amp; Routing → Add Staff Member (requires step 9 done once).</div></div>
     <div class="step"><div class="n">8</div><div class="sx">Portal → Team &amp; Routing: check which members serve each of the eight need areas.</div></div>
+    <div class="step"><div class="n">9</div><div class="sx">One-time: Dashboard → <b>Edge Functions</b> → Deploy new function → name it exactly <code>create-staff</code> → paste the contents of <code>create-staff.ts</code> → Deploy. Leave JWT verification ON (default). No secrets to add — the service role key is injected automatically.</div></div>
   </div>
 </div>
 
@@ -394,6 +416,9 @@ values ('&lt;ADMIN-AUTH-UUID&gt;', 'Jon Jacobson', 'jonj@360-llc.com', 'admin');
     <h3>Version history</h3>
     <table class="schema-table">
       <tr><th>Version</th><th>Date</th><th>Changes</th></tr>
+      <tr><td>V1.05</td><td>2026-07-16</td><td>Flame marks removed; wordmark only.</td></tr>
+      <tr><td>V1.04</td><td>2026-07-16</td><td>Logo marks rebuilt to official brand (flame + open ring, gray/gold wordmark). Phone number removed from footer and error copy.</td></tr>
+      <tr><td>V1.03</td><td>2026-07-16</td><td>Add Staff Member form in Team &amp; Routing via create-staff Edge Function (admin-gated, service role stays server-side). Header Password button for self-service password change.</td></tr>
       <tr><td>V1.02</td><td>2026-07-16</td><td>Supabase config baked (project zcrksrnpmhizonnzgknv, publishable key). RLS verified live: 4/4 tables enforced, 11 policies. Admin account provisioned. No functional changes.</td></tr>
       <tr><td>V1.01</td><td>2026-07-15</td><td>Docs restyled to AR CRM format. No app changes.</td></tr>
       <tr><td>V1.00</td><td>2026-07-15</td><td>Initial build: public intake form, staff auth, requests + routing suggestion, status pipeline, admin tasks, team &amp; routing, statistics, full RLS schema.</td></tr>
@@ -402,7 +427,7 @@ values ('&lt;ADMIN-AUTH-UUID&gt;', 'Jon Jacobson', 'jonj@360-llc.com', 'admin');
   </div>
 </div>
 
-<div class="doc-footer">Care Team App · Ignite Church, Moorhead MN · V1.02 · Built by 360 Solutions LLC</div>
+<div class="doc-footer">Care Team App · Ignite Church, Moorhead MN · V1.05 · Built by 360 Solutions LLC</div>
 </div>
 
 <script>
