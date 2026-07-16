@@ -327,24 +327,53 @@ footer .fmark{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-sp
   <h1 class="display" style="font-size:24px">Care Team Portal</h1>
   <div class="goldline"></div>
   <nav class="tabs" id="portalTabs">
-    <button data-tab="requests" class="active">Requests</button>
-    <button data-tab="stats">Statistics</button>
-    <button data-tab="tasks" class="hide" id="tabTasksBtn">Tasks</button>
+    <button data-tab="dash" class="active">Dashboard</button>
+    <button data-tab="mine">My Cases</button>
+    <button data-tab="requests">All Requests</button>
+    <button data-tab="tasks">Tasks</button>
+    <button data-tab="stats">Reports</button>
     <button data-tab="team" class="hide" id="tabTeamBtn">Team &amp; Routing</button>
   </nav>
+
+  <!-- Dashboard -->
+  <div id="tab-dash">
+    <div class="statgrid" id="dashCards"></div>
+    <h2 class="sec">Follow-Ups Due</h2>
+    <div id="dashDue"></div>
+  </div>
+
+  <!-- My Cases -->
+  <div id="tab-mine" class="hide">
+    <div class="filters">
+      <select id="mineShow" onchange="renderMyCases()">
+        <option value="open">Open cases</option>
+        <option value="closed">Closed</option>
+        <option value="all">All</option>
+      </select>
+    </div>
+    <div id="mineList"></div>
+    <p class="mut hide" id="mineEmpty">Nothing assigned to you right now.</p>
+  </div>
 
   <!-- Requests -->
   <div id="tab-requests">
     <div class="filters">
       <select id="fltStatus"><option value="">All statuses</option></select>
       <select id="fltNeed"><option value="">All areas of need</option></select>
+      <select id="fltAssign"><option value="">All assignees</option></select>
     </div>
     <div id="reqList"></div>
     <p class="mut hide" id="reqEmpty">No care requests match these filters.</p>
   </div>
 
-  <!-- Statistics -->
+  <!-- Reports -->
   <div id="tab-stats" class="hide">
+    <h2 class="sec">Team Activity</h2>
+    <div id="staffActivity"></div>
+    <div class="spacer"></div>
+    <h2 class="sec">Overdue Follow-Ups</h2>
+    <div id="overdueList"></div>
+    <div class="spacer"></div>
     <div class="statgrid" id="statCards"></div>
     <h2 class="sec">Areas of Need</h2>
     <div id="needBars"></div>
@@ -356,7 +385,7 @@ footer .fmark{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-sp
     <div id="demoBars"></div>
   </div>
 
-  <!-- Tasks (admin) -->
+  <!-- Tasks -->
   <div id="tab-tasks" class="hide">
     <div class="inline-form">
       <h2 class="sec">New Task</h2>
@@ -371,6 +400,12 @@ footer .fmark{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-sp
       </div>
       <button class="btn sm" onclick="createTask()">Add Task</button>
       <p class="formerr" id="taskErr"></p>
+    </div>
+    <div class="filters">
+      <select id="taskShow" onchange="renderTasks()">
+        <option value="mine">My tasks</option>
+        <option value="all">All tasks</option>
+      </select>
     </div>
     <div id="taskList"></div>
     <p class="mut hide" id="taskEmpty">No tasks yet.</p>
@@ -417,11 +452,16 @@ footer .fmark{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-sp
       <div><label class="fl" for="dEmail">Email</label><input type="email" id="dEmail"></div>
       <div><label class="fl" for="dPhone">Phone</label><input type="tel" id="dPhone"></div>
     </div>
-    <h3 style="font-family:'Oswald',sans-serif;text-transform:uppercase;font-size:14px;letter-spacing:.05em;margin:18px 0 8px">Notes</h3>
-    <div id="dNotes"><p class="mut">Loading notes…</p></div>
-    <div class="row" style="margin-top:10px">
-      <textarea id="dNoteBody" placeholder="Log a contact, meeting, or update…" style="min-height:64px"></textarea>
-      <button class="btn ghost sm" style="margin-top:8px" onclick="addNote()">Add Note</button>
+    <h3 style="font-family:'Oswald',sans-serif;text-transform:uppercase;font-size:14px;letter-spacing:.05em;margin:18px 0 8px">Activity Log</h3>
+    <div id="dNotes"><p class="mut">Loading activity…</p></div>
+    <div class="grid2 row" style="margin-top:10px">
+      <div><label class="fl" for="dActType">Type</label><select id="dActType"></select></div>
+      <div><label class="fl" for="dActOutcome">Outcome</label><select id="dActOutcome"></select></div>
+    </div>
+    <div class="row"><label class="fl" for="dNoteBody">Details</label><textarea id="dNoteBody" style="min-height:64px" placeholder="What happened, what's next…"></textarea></div>
+    <div class="grid2 row">
+      <div><label class="fl" for="dFollowup">Next follow-up</label><input type="date" id="dFollowup"></div>
+      <div style="display:flex;align-items:flex-end"><button class="btn ghost sm" onclick="logActivity()">Log Activity</button></div>
     </div>
     <div class="panel-actions">
       <button class="btn danger sm hide" id="dDelete" onclick="deleteRequest()">Delete Request</button>
@@ -454,7 +494,7 @@ const BAKED_CONFIG = {
 };
 /* ================================================ */
 
-const APP_VERSION = "V1.07";
+const APP_VERSION = "V1.08";
 const NEEDS = [
   "Miscarriage",
   "Stillbirth",
@@ -473,6 +513,12 @@ const STATUSES = [
   {v:"closed",    l:"Closed",            cls:"b-closed"}
 ];
 const statusMeta = v => STATUSES.find(s=>s.v===v) || STATUSES[0];
+const ACT_TYPES = [["call","Call"],["text","Text"],["email","Email"],["in_person","In person"],["meeting","Meeting"],["prayer","Prayer"],["note","General note"]];
+const OUTCOMES = [["","— outcome —"],["connected","Connected"],["left_message","Left message"],["no_answer","No answer"],["meeting_scheduled","Meeting scheduled"]];
+const typeLabel = v => (ACT_TYPES.find(t=>t[0]===v)||[,"Note"])[1];
+const outcomeLabel = v => { const o = OUTCOMES.find(x=>x[0]===v); return (o&&o[0]) ? " · "+o[1] : ""; };
+function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function daysSince(ts){ return Math.floor((Date.now()-new Date(ts).getTime())/86400000); }
 
 const configured = !!(BAKED_CONFIG.SUPABASE_URL && BAKED_CONFIG.SUPABASE_ANON_KEY);
 const sb = configured ? supabase.createClient(BAKED_CONFIG.SUPABASE_URL, BAKED_CONFIG.SUPABASE_ANON_KEY) : null;
@@ -482,6 +528,7 @@ let staff = [];           // staff_profiles
 let requests = [];        // care_requests
 let routing = [];         // need_routing rows
 let tasks = [];           // tasks
+let notesAll = [];        // all case_notes (for reports)
 let detailId = null;
 
 /* ---------- view switching ---------- */
@@ -592,11 +639,11 @@ async function enterPortal(){
   document.getElementById("hdrPass").classList.remove("hide");
   document.getElementById("hdrSignOut").classList.remove("hide");
   const isAdmin = prof.role==="admin";
-  document.getElementById("tabTasksBtn").classList.toggle("hide", !isAdmin);
   document.getElementById("tabTeamBtn").classList.toggle("hide", !isAdmin);
+  document.getElementById("taskShow").value = isAdmin ? "all" : "mine";
   showView("portal");
   await loadAll();
-  switchTab("requests");
+  switchTab("dash");
 }
 async function signOut(){
   if(sb) await sb.auth.signOut();
@@ -609,16 +656,20 @@ async function signOut(){
 
 /* ---------- portal data ---------- */
 async function loadAll(){
-  const [r1,r2,r3,r4] = await Promise.all([
+  const [r1,r2,r3,r4,r5] = await Promise.all([
     sb.from("care_requests").select("*").order("created_at",{ascending:false}),
     sb.from("staff_profiles").select("*").order("full_name"),
     sb.from("need_routing").select("*"),
-    me.role==="admin" ? sb.from("tasks").select("*").order("created_at",{ascending:false}) : Promise.resolve({data:[]})
+    sb.from("tasks").select("*").order("created_at",{ascending:false}),
+    sb.from("case_notes").select("*")
   ]);
-  requests = r1.data||[]; staff = r2.data||[]; routing = r3.data||[]; tasks = r4.data||[];
+  requests = r1.data||[]; staff = r2.data||[]; routing = r3.data||[]; tasks = r4.data||[]; notesAll = r5.data||[];
   buildFilters();
-  renderRequests(); renderStats();
-  if(me.role==="admin"){ renderTasks(); renderTeam(); }
+  renderAll();
+}
+function renderAll(){
+  renderDashboard(); renderMyCases(); renderRequests(); renderStats(); renderTasks();
+  if(me.role==="admin") renderTeam();
 }
 
 /* ---------- tabs ---------- */
@@ -627,7 +678,66 @@ document.getElementById("portalTabs").addEventListener("click", e=>{
 });
 function switchTab(t){
   document.querySelectorAll("#portalTabs button").forEach(b=>b.classList.toggle("active", b.dataset.tab===t));
-  ["requests","stats","tasks","team"].forEach(x=>document.getElementById("tab-"+x).classList.toggle("hide", x!==t));
+  ["dash","mine","requests","stats","tasks","team"].forEach(x=>document.getElementById("tab-"+x).classList.toggle("hide", x!==t));
+}
+
+/* ---------- shared case card ---------- */
+function caseSub(r){
+  const d = new Date(r.created_at).toLocaleDateString();
+  let s = `${esc(r.primary_need)} · ${d} · ${esc(staffName(r.assigned_to))}`;
+  if(r.status!=="closed"){
+    if(r.next_followup_date){
+      const od = r.next_followup_date < todayStr();
+      s += ` · <span style="${od?'color:var(--danger);font-weight:700':''}">Follow-up ${r.next_followup_date}${od?" (overdue)":""}</span>`;
+    }
+    if(!r.last_activity_at) s += ` · <span style="color:var(--danger)">No contact yet</span>`;
+    else if(daysSince(r.last_activity_at)>14) s += ` · <span style="color:var(--danger)">${daysSince(r.last_activity_at)}d since contact</span>`;
+  }
+  return s;
+}
+function listItem(r){
+  const sm = statusMeta(r.status);
+  return `<div class="list-item" onclick="openDetail('${r.id}')">
+    <div class="li-main">
+      <div class="li-name">${esc(r.first_name)} ${esc(r.last_name)}</div>
+      <div class="li-sub">${caseSub(r)}</div>
+    </div>
+    <div class="li-side"><span class="badge ${sm.cls}">${sm.l}</span></div>
+  </div>`;
+}
+
+/* ---------- dashboard ---------- */
+function renderDashboard(){
+  const myOpen = requests.filter(r=>r.assigned_to===me.id && r.status!=="closed");
+  const unassignedNew = requests.filter(r=>!r.assigned_to && r.status==="new");
+  const due = myOpen.filter(r=>r.next_followup_date && r.next_followup_date<=todayStr());
+  const myTasks = tasks.filter(t=>t.assigned_to===me.id && t.status==="open");
+  document.getElementById("dashCards").innerHTML = [
+    [myOpen.length,"My open cases","mine"],
+    [unassignedNew.length,"Unassigned new","requests"],
+    [due.length,"Follow-ups due","mine"],
+    [myTasks.length,"My open tasks","tasks"]
+  ].map(([n,l,t])=>`<div class="stat" style="cursor:pointer" onclick="switchTab('${t}')"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
+  const box = document.getElementById("dashDue");
+  if(!due.length){
+    box.innerHTML = `<p class="mut">${myOpen.length ? "No follow-ups due today. Your open cases are in My Cases." : "Nothing on your plate right now."}</p>`;
+    return;
+  }
+  box.innerHTML = due.slice().sort((a,b)=>a.next_followup_date.localeCompare(b.next_followup_date)).map(listItem).join("");
+}
+
+/* ---------- my cases ---------- */
+function renderMyCases(){
+  const show = document.getElementById("mineShow").value;
+  let rows = requests.filter(r=>r.assigned_to===me.id);
+  if(show==="open") rows = rows.filter(r=>r.status!=="closed");
+  if(show==="closed") rows = rows.filter(r=>r.status==="closed");
+  rows = rows.slice().sort((a,b)=>{
+    const af=a.next_followup_date||"9999-99-99", bf=b.next_followup_date||"9999-99-99";
+    return af.localeCompare(bf) || b.created_at.localeCompare(a.created_at);
+  });
+  document.getElementById("mineEmpty").classList.toggle("hide", rows.length>0);
+  document.getElementById("mineList").innerHTML = rows.map(listItem).join("");
 }
 
 /* ---------- requests list ---------- */
@@ -636,26 +746,23 @@ function buildFilters(){
   fs.innerHTML = `<option value="">All statuses</option>` + STATUSES.map(s=>`<option value="${s.v}">${s.l}</option>`).join("");
   const fn = document.getElementById("fltNeed");
   fn.innerHTML = `<option value="">All areas of need</option>` + NEEDS.map(n=>`<option>${n}</option>`).join("");
-  fs.onchange = renderRequests; fn.onchange = renderRequests;
+  const fa = document.getElementById("fltAssign");
+  fa.innerHTML = `<option value="">All assignees</option><option value="none">Unassigned</option>` + staff.map(s=>`<option value="${s.id}">${esc(s.full_name)}</option>`).join("");
+  fs.onchange = renderRequests; fn.onchange = renderRequests; fa.onchange = renderRequests;
 }
 function staffName(id){ const s = staff.find(x=>x.id===id); return s ? s.full_name : "—"; }
 function renderRequests(){
   const fs = document.getElementById("fltStatus").value;
   const fn = document.getElementById("fltNeed").value;
+  const fa = document.getElementById("fltAssign").value;
   const list = document.getElementById("reqList");
-  const rows = requests.filter(r => (!fs || r.status===fs) && (!fn || r.primary_need===fn || (r.needs||[]).includes(fn)));
+  const rows = requests.filter(r =>
+    (!fs || r.status===fs) &&
+    (!fn || r.primary_need===fn || (r.needs||[]).includes(fn)) &&
+    (!fa || (fa==="none" ? !r.assigned_to : r.assigned_to===fa))
+  );
   document.getElementById("reqEmpty").classList.toggle("hide", rows.length>0);
-  list.innerHTML = rows.map(r=>{
-    const sm = statusMeta(r.status);
-    const d = new Date(r.created_at).toLocaleDateString();
-    return `<div class="list-item" onclick="openDetail('${r.id}')">
-      <div class="li-main">
-        <div class="li-name">${esc(r.first_name)} ${esc(r.last_name)}</div>
-        <div class="li-sub">${esc(r.primary_need)} &middot; ${d} &middot; Assigned: ${esc(staffName(r.assigned_to))}</div>
-      </div>
-      <div class="li-side"><span class="badge ${sm.cls}">${sm.l}</span></div>
-    </div>`;
-  }).join("");
+  list.innerHTML = rows.map(listItem).join("");
 }
 function esc(s){ return (s??"").toString().replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
@@ -690,7 +797,16 @@ function openDetail(id){
   document.getElementById("dAssign").innerHTML = `<option value="">Unassigned</option>` + staff.map(s=>`<option value="${s.id}" ${s.id===r.assigned_to?"selected":""}>${esc(s.full_name)}</option>`).join("");
   document.getElementById("dEmail").value = r.email || "";
   document.getElementById("dPhone").value = r.phone || "";
+  document.getElementById("dActType").innerHTML = ACT_TYPES.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
+  document.getElementById("dActOutcome").innerHTML = OUTCOMES.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
+  document.getElementById("dFollowup").value = r.next_followup_date || "";
   document.getElementById("dNoteBody").value = "";
+  const canEdit = me.role==="admin" || r.assigned_to===me.id;
+  document.getElementById("dStatus").disabled = !canEdit;
+  document.getElementById("dAssign").disabled = me.role!=="admin";
+  document.getElementById("dEmail").disabled = !canEdit;
+  document.getElementById("dPhone").disabled = !canEdit;
+  document.getElementById("dSave").classList.toggle("hide", !canEdit);
   document.getElementById("dDelete").classList.toggle("hide", me.role!=="admin");
   document.getElementById("dErr").style.display="none";
   document.getElementById("detailOverlay").classList.add("open");
@@ -699,7 +815,7 @@ function openDetail(id){
 function noteAuthor(id){ if(!id) return "Former staff"; const n = staffName(id); return n==="—" ? "Former staff" : n; }
 async function loadNotes(id){
   const box = document.getElementById("dNotes");
-  box.innerHTML = `<p class="mut">Loading notes…</p>`;
+  box.innerHTML = `<p class="mut">Loading activity…</p>`;
   const { data, error } = await sb.from("case_notes").select("*").eq("request_id", id).order("created_at",{ascending:false});
   if(error){ box.innerHTML = `<p class="mut">Could not load notes: ${esc(error.message)}</p>`; return; }
   if(id !== detailId) return; // panel changed while loading
@@ -709,18 +825,29 @@ let currentNotes = [];
 function renderNotes(list){
   currentNotes = list;
   const box = document.getElementById("dNotes");
-  if(!list.length){ box.innerHTML = `<p class="mut">No notes yet — log the first contact below.</p>`; return; }
-  box.innerHTML = list.map(n=>`<div class="note"><div class="nmeta">${esc(noteAuthor(n.author_id))} · ${new Date(n.created_at).toLocaleString()}</div>${esc(n.body)}</div>`).join("");
+  if(!list.length){ box.innerHTML = `<p class="mut">No activity yet — log the first contact below.</p>`; return; }
+  box.innerHTML = list.map(n=>`<div class="note"><div class="nmeta"><b>${esc(typeLabel(n.activity_type))}</b>${esc(outcomeLabel(n.outcome))} — ${esc(noteAuthor(n.author_id))} · ${new Date(n.created_at).toLocaleString()}</div>${esc(n.body)}</div>`).join("");
 }
-async function addNote(){
+async function logActivity(){
+  const derr = document.getElementById("dErr"); derr.style.display="none";
+  const r = requests.find(x=>x.id===detailId); if(!r) return;
+  const activity_type = document.getElementById("dActType").value;
+  const outcome = document.getElementById("dActOutcome").value || null;
   const body = document.getElementById("dNoteBody").value.trim();
-  const derr = document.getElementById("dErr");
-  derr.style.display="none";
-  if(!body){ derr.textContent="Note is empty."; derr.style.display="block"; return; }
-  const { data, error } = await sb.from("case_notes").insert({request_id: detailId, author_id: me.id, body}).select().single();
-  if(error){ derr.textContent="Note failed: "+error.message; derr.style.display="block"; return; }
-  document.getElementById("dNoteBody").value="";
+  const followup = document.getElementById("dFollowup").value || null;
+  if(!body && activity_type==="note"){ derr.textContent="A general note needs details."; derr.style.display="block"; return; }
+  const { data, error } = await sb.from("case_notes").insert({request_id: detailId, author_id: me.id, body, activity_type, outcome}).select().single();
+  if(error){ derr.textContent="Log failed: "+error.message; derr.style.display="block"; return; }
+  notesAll.push(data);
   renderNotes([data, ...currentNotes]);
+  document.getElementById("dNoteBody").value="";
+  document.getElementById("dActOutcome").value="";
+  // workflow fields — RLS allows owner or admin; others just log the touch
+  if(me.role==="admin" || r.assigned_to===me.id){
+    const patch = { last_activity_at: new Date().toISOString(), next_followup_date: followup };
+    const { error: e2 } = await sb.from("care_requests").update(patch).eq("id", detailId);
+    if(!e2){ r.last_activity_at = patch.last_activity_at; r.next_followup_date = followup; renderAll(); }
+  }
 }
 async function deleteRequest(){
   const r = requests.find(x=>x.id===detailId); if(!r) return;
@@ -729,7 +856,8 @@ async function deleteRequest(){
   const derr = document.getElementById("dErr");
   if(error){ derr.textContent="Delete failed: "+error.message; derr.style.display="block"; return; }
   requests = requests.filter(x=>x.id!==detailId);
-  renderRequests(); renderStats(); if(me.role==="admin") renderTasks();
+  notesAll = notesAll.filter(n=>n.request_id!==detailId);
+  renderAll();
   closeDetail();
 }
 function closeDetail(){ document.getElementById("detailOverlay").classList.remove("open"); detailId=null; }
@@ -746,11 +874,31 @@ async function saveDetail(){
   const { error } = await sb.from("care_requests").update({status, assigned_to:assigned, email, phone}).eq("id", detailId);
   if(error){ derr.textContent="Save failed: "+error.message; derr.style.display="block"; return; }
   r.status = status; r.assigned_to = assigned; r.email = email; r.phone = phone;
-  renderRequests(); renderStats(); closeDetail();
+  renderAll(); closeDetail();
 }
 
-/* ---------- statistics ---------- */
+/* ---------- reports ---------- */
 function renderStats(){
+  // team activity
+  const actBox = document.getElementById("staffActivity");
+  actBox.innerHTML = staff.length ? staff.map(s=>{
+    const myReq = requests.filter(r=>r.assigned_to===s.id && r.status!=="closed");
+    const t7 = notesAll.filter(n=>n.author_id===s.id && daysSince(n.created_at)<7).length;
+    const t30 = notesAll.filter(n=>n.author_id===s.id && daysSince(n.created_at)<30).length;
+    const avg = myReq.length ? Math.round(myReq.reduce((a,r)=>a+daysSince(r.last_activity_at||r.created_at),0)/myReq.length) : null;
+    const od = myReq.filter(r=>r.next_followup_date && r.next_followup_date<todayStr()).length;
+    return `<div class="trow"><div class="t-main">
+      <div class="t-name">${esc(s.full_name)}</div>
+      <div class="t-sub">${myReq.length} open case${myReq.length===1?"":"s"} · ${t7} touches (7d) · ${t30} touches (30d) · avg ${avg===null?"—":avg+"d"} since contact${od?` · <span style="color:var(--danger);font-weight:700">${od} overdue</span>`:""}</div>
+    </div></div>`;
+  }).join("") : `<p class="mut">No staff yet.</p>`;
+
+  // overdue follow-ups (all staff — accountability view)
+  const overdue = requests
+    .filter(r=>r.status!=="closed" && r.next_followup_date && r.next_followup_date<todayStr())
+    .sort((a,b)=>a.next_followup_date.localeCompare(b.next_followup_date));
+  document.getElementById("overdueList").innerHTML = overdue.length ? overdue.map(listItem).join("") : `<p class="mut">Nothing overdue. Good.</p>`;
+
   const total = requests.length;
   const open = requests.filter(r=>r.status!=="closed").length;
   const home = requests.filter(r=>r.home_church).length;
@@ -766,7 +914,11 @@ function renderStats(){
   const nm = Math.max(1,...needCounts.map(x=>x[1]));
   document.getElementById("needBars").innerHTML = needCounts.map(([n,c])=>bar(n,c,nm)).join("");
 
-  const stCounts = STATUSES.map(s=>[s.l, requests.filter(r=>r.status===s.v).length]);
+  const stCounts = STATUSES.map(s=>{
+    const rs = requests.filter(r=>r.status===s.v);
+    const avg = rs.length ? Math.round(rs.reduce((a,r)=>a+daysSince(r.created_at),0)/rs.length) : null;
+    return [s.l + (avg!==null ? ` — avg ${avg}d old` : ""), rs.length];
+  });
   const sm2 = Math.max(1,...stCounts.map(x=>x[1]));
   document.getElementById("statusBars").innerHTML = stCounts.map(([n,c])=>bar(n,c,sm2)).join("");
 
@@ -784,20 +936,25 @@ function renderStats(){
 
 /* ---------- tasks (admin) ---------- */
 function renderTasks(){
-  document.getElementById("t_assignee").innerHTML = staff.map(s=>`<option value="${s.id}">${esc(s.full_name)}</option>`).join("");
+  const assignees = me.role==="admin" ? staff : staff.filter(s=>s.id===me.id);
+  document.getElementById("t_assignee").innerHTML = assignees.map(s=>`<option value="${s.id}">${esc(s.full_name)}</option>`).join("");
   document.getElementById("t_request").innerHTML = `<option value="">—</option>` + requests.map(r=>`<option value="${r.id}">${esc(r.first_name+" "+r.last_name)} — ${esc(r.primary_need)}</option>`).join("");
+  const show = document.getElementById("taskShow").value;
   const list = document.getElementById("taskList");
-  document.getElementById("taskEmpty").classList.toggle("hide", tasks.length>0);
-  list.innerHTML = tasks.map(t=>{
+  const rows = tasks.filter(t => show==="all" || t.assigned_to===me.id || t.created_by===me.id);
+  document.getElementById("taskEmpty").classList.toggle("hide", rows.length>0);
+  list.innerHTML = rows.map(t=>{
     const req = requests.find(r=>r.id===t.request_id);
+    const canWork = me.role==="admin" || t.assigned_to===me.id || t.created_by===me.id;
+    const canDelete = me.role==="admin" || t.created_by===me.id;
     return `<div class="trow ${t.status==='done'?'done':''}">
       <div class="t-main">
         <div class="t-name">${esc(t.title)}</div>
         <div class="t-sub">${esc(t.description||"")}${t.description?" · ":""}Assigned: ${esc(staffName(t.assigned_to))}${t.due_date?" · Due "+t.due_date:""}${req?" · Re: "+esc(req.first_name+" "+req.last_name):""}</div>
       </div>
       <div class="li-side">
-        <button class="btn ghost sm" onclick="toggleTask('${t.id}')">${t.status==='done'?"Reopen":"Mark done"}</button>
-        <button class="btn danger sm" onclick="deleteTask('${t.id}')">Delete</button>
+        ${canWork?`<button class="btn ghost sm" onclick="toggleTask('${t.id}')">${t.status==='done'?"Reopen":"Mark done"}</button>`:""}
+        ${canDelete?`<button class="btn danger sm" onclick="deleteTask('${t.id}')">Delete</button>`:""}
       </div>
     </div>`;
   }).join("");
@@ -817,18 +974,18 @@ async function createTask(){
   if(error){ err.textContent="Could not add task: "+error.message; err.style.display="block"; return; }
   tasks.unshift(data);
   ["t_title","t_desc","t_due"].forEach(id=>document.getElementById(id).value="");
-  renderTasks();
+  renderTasks(); renderDashboard();
 }
 async function toggleTask(id){
   const t = tasks.find(x=>x.id===id); if(!t) return;
   const status = t.status==="done" ? "open" : "done";
   const { error } = await sb.from("tasks").update({status}).eq("id",id);
-  if(!error){ t.status=status; renderTasks(); }
+  if(!error){ t.status=status; renderTasks(); renderDashboard(); }
 }
 async function deleteTask(id){
   if(!confirm("Delete this task?")) return;
   const { error } = await sb.from("tasks").delete().eq("id",id);
-  if(!error){ tasks = tasks.filter(t=>t.id!==id); renderTasks(); }
+  if(!error){ tasks = tasks.filter(t=>t.id!==id); renderTasks(); renderDashboard(); }
 }
 
 /* ---------- team & routing (admin) ---------- */
@@ -909,7 +1066,7 @@ async function addStaff(){
   if(r.error) return fail(r.error);
   staff.push(r.profile);
   staff.sort((a,b)=>a.full_name.localeCompare(b.full_name));
-  renderTeam(); renderTasks();
+  buildFilters(); renderAll();
   ["s_name","s_email","s_pass"].forEach(id=>document.getElementById(id).value="");
   ok.textContent = "Account created for "+r.profile.full_name+". Give them their temp password — they sign in via Staff Login and should change it using the Password button.";
   ok.style.display="block";
@@ -932,7 +1089,7 @@ async function editStaff(id){
   const r = await staffAdmin({ action:"update", staff_id:id, full_name:full_name.trim(), email:email.trim() });
   if(r.error){ alert("Update failed: "+r.error); return; }
   s.full_name = r.profile.full_name; s.email = r.profile.email;
-  renderTeam(); renderTasks(); renderRequests();
+  buildFilters(); renderAll();
 }
 async function removeStaff(id){
   const s = staff.find(x=>x.id===id); if(!s) return;
@@ -943,7 +1100,7 @@ async function removeStaff(id){
   routing = routing.filter(x=>x.staff_id!==id);
   requests.forEach(q=>{ if(q.assigned_to===id) q.assigned_to=null; });
   tasks.forEach(t=>{ if(t.assigned_to===id) t.assigned_to=null; if(t.created_by===id) t.created_by=null; });
-  renderTeam(); renderTasks(); renderRequests(); renderStats();
+  buildFilters(); renderAll();
 }
 
 /* ---------- change own password ---------- */
